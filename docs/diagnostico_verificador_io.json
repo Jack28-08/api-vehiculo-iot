@@ -1,0 +1,7 @@
+{
+  "replace_while_reader_open": "PermissionError",
+  "errno": 13,
+  "winerror": 5,
+  "replace_after_reader_closed": "success",
+  "held_descriptor_write_fsync_read": "success"
+}

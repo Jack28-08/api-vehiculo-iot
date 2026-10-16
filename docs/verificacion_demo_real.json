@@ -1,0 +1,1197 @@
+{
+  "started_at_utc": "2026-10-16T05:30:14.702534+00:00",
+  "status": "failed",
+  "id_vehiculo": 1,
+  "id_demo": 1,
+  "target": {
+    "rds_endpoint_confirmed": true,
+    "schema": "vehiculo_iot"
+  },
+  "persistence": {
+    "confirmed": true,
+    "state": {
+      "id_vehiculo": 1,
+      "vehiculo": "Grúa IoT de Jack",
+      "id_comando": 2,
+      "comando": "AVANZAR",
+      "codigo": 2,
+      "conectado": 0,
+      "fecha_actualizacion": "2026-10-16 05:20:39"
+    },
+    "record_6": {
+      "id_historial": 6,
+      "id_vehiculo": 1,
+      "comando": "AVANZAR",
+      "codigo": 2,
+      "fecha_hora": "2026-10-16 05:20:39",
+      "origen": "THUNDER_CLIENT"
+    },
+    "workbench_reported": {
+      "count": 5,
+      "max_id": 5
+    },
+    "fresh_rds": {
+      "count": 6,
+      "max_id": 6
+    }
+  },
+  "history_before": {
+    "count": 6,
+    "max_id": 6,
+    "rows": [
+      {
+        "id_historial": 1,
+        "id_vehiculo": 1,
+        "id_comando": 2,
+        "fecha_hora": "2026-10-07 06:25:25",
+        "origen": "VSCODE-RDS"
+      },
+      {
+        "id_historial": 2,
+        "id_vehiculo": 1,
+        "id_comando": 1,
+        "fecha_hora": "2026-10-07 06:25:25",
+        "origen": "VSCODE-RDS"
+      },
+      {
+        "id_historial": 3,
+        "id_vehiculo": 1,
+        "id_comando": 4,
+        "fecha_hora": "2026-10-07 06:25:25",
+        "origen": "VSCODE-RDS"
+      },
+      {
+        "id_historial": 4,
+        "id_vehiculo": 1,
+        "id_comando": 7,
+        "fecha_hora": "2026-10-07 06:25:25",
+        "origen": "VSCODE-RDS"
+      },
+      {
+        "id_historial": 5,
+        "id_vehiculo": 1,
+        "id_comando": 5,
+        "fecha_hora": "2026-10-07 06:25:25",
+        "origen": "VSCODE-RDS"
+      },
+      {
+        "id_historial": 6,
+        "id_vehiculo": 1,
+        "id_comando": 2,
+        "fecha_hora": "2026-10-16 05:20:39",
+        "origen": "THUNDER_CLIENT"
+      }
+    ],
+    "sha256": "ba9ba218872d3109d3a699a453ae49911977181422b0877393d8b91270d3ffb1"
+  },
+  "expected_demo_movements": [
+    {
+      "id_demo_movimiento": 1,
+      "orden": 1,
+      "id_comando": 2,
+      "comando": "AVANZAR",
+      "codigo": 2,
+      "duracion_ms": 2000,
+      "pausa_ms": 400
+    },
+    {
+      "id_demo_movimiento": 2,
+      "orden": 2,
+      "id_comando": 1,
+      "comando": "GIRAR_IZQUIERDA",
+      "codigo": 1,
+      "duracion_ms": 1000,
+      "pausa_ms": 300
+    },
+    {
+      "id_demo_movimiento": 3,
+      "orden": 3,
+      "id_comando": 4,
+      "comando": "SUBIR_GRUA",
+      "codigo": 4,
+      "duracion_ms": 1500,
+      "pausa_ms": 300
+    },
+    {
+      "id_demo_movimiento": 4,
+      "orden": 4,
+      "id_comando": 8,
+      "comando": "GIRAR_DERECHA",
+      "codigo": 8,
+      "duracion_ms": 1000,
+      "pausa_ms": 300
+    },
+    {
+      "id_demo_movimiento": 5,
+      "orden": 5,
+      "id_comando": 7,
+      "comando": "BAJAR_GRUA",
+      "codigo": 7,
+      "duracion_ms": 1500,
+      "pausa_ms": 300
+    },
+    {
+      "id_demo_movimiento": 6,
+      "orden": 6,
+      "id_comando": 5,
+      "comando": "RETROCEDER",
+      "codigo": 5,
+      "duracion_ms": 2000,
+      "pausa_ms": 400
+    },
+    {
+      "id_demo_movimiento": 7,
+      "orden": 7,
+      "id_comando": 2,
+      "comando": "AVANZAR",
+      "codigo": 2,
+      "duracion_ms": 1000,
+      "pausa_ms": 300
+    },
+    {
+      "id_demo_movimiento": 8,
+      "orden": 8,
+      "id_comando": 5,
+      "comando": "RETROCEDER",
+      "codigo": 5,
+      "duracion_ms": 1000,
+      "pausa_ms": 0
+    }
+  ],
+  "demo_belongs_to_vehicle": true,
+  "post_attempts": 1,
+  "websocket_clients": [
+    {
+      "client": 1,
+      "initial_state": {
+        "tipo": "estado_inicial",
+        "id_vehiculo": 1,
+        "id_comando": 2,
+        "comando": "AVANZAR",
+        "codigo": 2,
+        "fecha_hora": "2026-10-16T05:20:39Z",
+        "conectado": false,
+        "id_ejecucion": null,
+        "id_demo": null,
+        "total_movimientos": null,
+        "orden": null,
+        "duracion_ms": null,
+        "pausa_ms": null,
+        "mensaje": null
+      },
+      "events": [
+        {
+          "payload": {
+            "tipo": "demo_inicio",
+            "id_vehiculo": 1,
+            "id_comando": null,
+            "comando": null,
+            "codigo": null,
+            "fecha_hora": "2026-10-16T05:31:51.651237Z",
+            "conectado": null,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": null,
+            "duracion_ms": null,
+            "pausa_ms": null,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:31:51.662888+00:00",
+          "received_monotonic_ms": 1322.948
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 2,
+            "comando": "AVANZAR",
+            "codigo": 2,
+            "fecha_hora": "2026-10-16T05:31:53Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 1,
+            "duracion_ms": 2000,
+            "pausa_ms": 400,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:31:53.391331+00:00",
+          "received_monotonic_ms": 3051.385
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 1,
+            "comando": "GIRAR_IZQUIERDA",
+            "codigo": 1,
+            "fecha_hora": "2026-10-16T05:31:57Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 2,
+            "duracion_ms": 1000,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:31:57.810759+00:00",
+          "received_monotonic_ms": 7470.816
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 4,
+            "comando": "SUBIR_GRUA",
+            "codigo": 4,
+            "fecha_hora": "2026-10-16T05:32:01Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 3,
+            "duracion_ms": 1500,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:00.821695+00:00",
+          "received_monotonic_ms": 10481.754
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 8,
+            "comando": "GIRAR_DERECHA",
+            "codigo": 8,
+            "fecha_hora": "2026-10-16T05:32:04Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 4,
+            "duracion_ms": 1000,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:04.428888+00:00",
+          "received_monotonic_ms": 14088.946
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 7,
+            "comando": "BAJAR_GRUA",
+            "codigo": 7,
+            "fecha_hora": "2026-10-16T05:32:07Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 5,
+            "duracion_ms": 1500,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:07.449192+00:00",
+          "received_monotonic_ms": 17109.252
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 5,
+            "comando": "RETROCEDER",
+            "codigo": 5,
+            "fecha_hora": "2026-10-16T05:32:11Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 6,
+            "duracion_ms": 2000,
+            "pausa_ms": 400,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:11.111036+00:00",
+          "received_monotonic_ms": 20771.095
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 2,
+            "comando": "AVANZAR",
+            "codigo": 2,
+            "fecha_hora": "2026-10-16T05:32:15Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 7,
+            "duracion_ms": 1000,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:15.279919+00:00",
+          "received_monotonic_ms": 24939.977
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 5,
+            "comando": "RETROCEDER",
+            "codigo": 5,
+            "fecha_hora": "2026-10-16T05:32:18Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 8,
+            "duracion_ms": 1000,
+            "pausa_ms": 0,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:18.382154+00:00",
+          "received_monotonic_ms": 28042.212
+        }
+      ],
+      "execution_events": [
+        {
+          "payload": {
+            "tipo": "demo_inicio",
+            "id_vehiculo": 1,
+            "id_comando": null,
+            "comando": null,
+            "codigo": null,
+            "fecha_hora": "2026-10-16T05:31:51.651237Z",
+            "conectado": null,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": null,
+            "duracion_ms": null,
+            "pausa_ms": null,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:31:51.662888+00:00",
+          "received_monotonic_ms": 1322.948
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 2,
+            "comando": "AVANZAR",
+            "codigo": 2,
+            "fecha_hora": "2026-10-16T05:31:53Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 1,
+            "duracion_ms": 2000,
+            "pausa_ms": 400,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:31:53.391331+00:00",
+          "received_monotonic_ms": 3051.385
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 1,
+            "comando": "GIRAR_IZQUIERDA",
+            "codigo": 1,
+            "fecha_hora": "2026-10-16T05:31:57Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 2,
+            "duracion_ms": 1000,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:31:57.810759+00:00",
+          "received_monotonic_ms": 7470.816
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 4,
+            "comando": "SUBIR_GRUA",
+            "codigo": 4,
+            "fecha_hora": "2026-10-16T05:32:01Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 3,
+            "duracion_ms": 1500,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:00.821695+00:00",
+          "received_monotonic_ms": 10481.754
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 8,
+            "comando": "GIRAR_DERECHA",
+            "codigo": 8,
+            "fecha_hora": "2026-10-16T05:32:04Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 4,
+            "duracion_ms": 1000,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:04.428888+00:00",
+          "received_monotonic_ms": 14088.946
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 7,
+            "comando": "BAJAR_GRUA",
+            "codigo": 7,
+            "fecha_hora": "2026-10-16T05:32:07Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 5,
+            "duracion_ms": 1500,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:07.449192+00:00",
+          "received_monotonic_ms": 17109.252
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 5,
+            "comando": "RETROCEDER",
+            "codigo": 5,
+            "fecha_hora": "2026-10-16T05:32:11Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 6,
+            "duracion_ms": 2000,
+            "pausa_ms": 400,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:11.111036+00:00",
+          "received_monotonic_ms": 20771.095
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 2,
+            "comando": "AVANZAR",
+            "codigo": 2,
+            "fecha_hora": "2026-10-16T05:32:15Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 7,
+            "duracion_ms": 1000,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:15.279919+00:00",
+          "received_monotonic_ms": 24939.977
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 5,
+            "comando": "RETROCEDER",
+            "codigo": 5,
+            "fecha_hora": "2026-10-16T05:32:18Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 8,
+            "duracion_ms": 1000,
+            "pausa_ms": 0,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:18.382154+00:00",
+          "received_monotonic_ms": 28042.212
+        }
+      ],
+      "sequence_ok": false,
+      "movement_checks": [
+        {
+          "orden": 1,
+          "matches_rds": true
+        },
+        {
+          "orden": 2,
+          "matches_rds": true
+        },
+        {
+          "orden": 3,
+          "matches_rds": true
+        },
+        {
+          "orden": 4,
+          "matches_rds": true
+        },
+        {
+          "orden": 5,
+          "matches_rds": true
+        },
+        {
+          "orden": 6,
+          "matches_rds": true
+        },
+        {
+          "orden": 7,
+          "matches_rds": true
+        },
+        {
+          "orden": 8,
+          "matches_rds": true
+        }
+      ],
+      "metadata_ok": true,
+      "timing_checks": [
+        {
+          "orden": 1,
+          "expected_wait_ms": 2400,
+          "observed_gap_ms": 4419.431,
+          "respected": true
+        },
+        {
+          "orden": 2,
+          "expected_wait_ms": 1300,
+          "observed_gap_ms": 3010.938,
+          "respected": true
+        },
+        {
+          "orden": 3,
+          "expected_wait_ms": 1800,
+          "observed_gap_ms": 3607.192,
+          "respected": true
+        },
+        {
+          "orden": 4,
+          "expected_wait_ms": 1300,
+          "observed_gap_ms": 3020.306,
+          "respected": true
+        },
+        {
+          "orden": 5,
+          "expected_wait_ms": 1800,
+          "observed_gap_ms": 3661.843,
+          "respected": true
+        },
+        {
+          "orden": 6,
+          "expected_wait_ms": 2400,
+          "observed_gap_ms": 4168.882,
+          "respected": true
+        },
+        {
+          "orden": 7,
+          "expected_wait_ms": 1300,
+          "observed_gap_ms": 3102.235,
+          "respected": true
+        }
+      ],
+      "timing_tolerance_ms": 100,
+      "ok": false,
+      "demo_inicio_received": true,
+      "demo_movimientos_received": 8,
+      "demo_fin_received": false,
+      "all_n_movements_match_rds": true
+    },
+    {
+      "client": 2,
+      "initial_state": {
+        "tipo": "estado_inicial",
+        "id_vehiculo": 1,
+        "id_comando": 2,
+        "comando": "AVANZAR",
+        "codigo": 2,
+        "fecha_hora": "2026-10-16T05:20:39Z",
+        "conectado": false,
+        "id_ejecucion": null,
+        "id_demo": null,
+        "total_movimientos": null,
+        "orden": null,
+        "duracion_ms": null,
+        "pausa_ms": null,
+        "mensaje": null
+      },
+      "events": [
+        {
+          "payload": {
+            "tipo": "demo_inicio",
+            "id_vehiculo": 1,
+            "id_comando": null,
+            "comando": null,
+            "codigo": null,
+            "fecha_hora": "2026-10-16T05:31:51.651237Z",
+            "conectado": null,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": null,
+            "duracion_ms": null,
+            "pausa_ms": null,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:31:51.652597+00:00",
+          "received_monotonic_ms": 1312.655
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 2,
+            "comando": "AVANZAR",
+            "codigo": 2,
+            "fecha_hora": "2026-10-16T05:31:53Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 1,
+            "duracion_ms": 2000,
+            "pausa_ms": 400,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:31:53.362169+00:00",
+          "received_monotonic_ms": 3022.225
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 1,
+            "comando": "GIRAR_IZQUIERDA",
+            "codigo": 1,
+            "fecha_hora": "2026-10-16T05:31:57Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 2,
+            "duracion_ms": 1000,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:31:57.567546+00:00",
+          "received_monotonic_ms": 7227.605
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 4,
+            "comando": "SUBIR_GRUA",
+            "codigo": 4,
+            "fecha_hora": "2026-10-16T05:32:01Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 3,
+            "duracion_ms": 1500,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:00.800630+00:00",
+          "received_monotonic_ms": 10460.684
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 8,
+            "comando": "GIRAR_DERECHA",
+            "codigo": 8,
+            "fecha_hora": "2026-10-16T05:32:04Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 4,
+            "duracion_ms": 1000,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:04.385000+00:00",
+          "received_monotonic_ms": 14045.057
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 7,
+            "comando": "BAJAR_GRUA",
+            "codigo": 7,
+            "fecha_hora": "2026-10-16T05:32:07Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 5,
+            "duracion_ms": 1500,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:07.444218+00:00",
+          "received_monotonic_ms": 17104.27
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 5,
+            "comando": "RETROCEDER",
+            "codigo": 5,
+            "fecha_hora": "2026-10-16T05:32:11Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 6,
+            "duracion_ms": 2000,
+            "pausa_ms": 400,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:11.072188+00:00",
+          "received_monotonic_ms": 20732.243
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 2,
+            "comando": "AVANZAR",
+            "codigo": 2,
+            "fecha_hora": "2026-10-16T05:32:15Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 7,
+            "duracion_ms": 1000,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:15.274013+00:00",
+          "received_monotonic_ms": 24934.072
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 5,
+            "comando": "RETROCEDER",
+            "codigo": 5,
+            "fecha_hora": "2026-10-16T05:32:18Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 8,
+            "duracion_ms": 1000,
+            "pausa_ms": 0,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:18.377108+00:00",
+          "received_monotonic_ms": 28037.163
+        }
+      ],
+      "execution_events": [
+        {
+          "payload": {
+            "tipo": "demo_inicio",
+            "id_vehiculo": 1,
+            "id_comando": null,
+            "comando": null,
+            "codigo": null,
+            "fecha_hora": "2026-10-16T05:31:51.651237Z",
+            "conectado": null,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": null,
+            "duracion_ms": null,
+            "pausa_ms": null,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:31:51.652597+00:00",
+          "received_monotonic_ms": 1312.655
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 2,
+            "comando": "AVANZAR",
+            "codigo": 2,
+            "fecha_hora": "2026-10-16T05:31:53Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 1,
+            "duracion_ms": 2000,
+            "pausa_ms": 400,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:31:53.362169+00:00",
+          "received_monotonic_ms": 3022.225
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 1,
+            "comando": "GIRAR_IZQUIERDA",
+            "codigo": 1,
+            "fecha_hora": "2026-10-16T05:31:57Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 2,
+            "duracion_ms": 1000,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:31:57.567546+00:00",
+          "received_monotonic_ms": 7227.605
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 4,
+            "comando": "SUBIR_GRUA",
+            "codigo": 4,
+            "fecha_hora": "2026-10-16T05:32:01Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 3,
+            "duracion_ms": 1500,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:00.800630+00:00",
+          "received_monotonic_ms": 10460.684
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 8,
+            "comando": "GIRAR_DERECHA",
+            "codigo": 8,
+            "fecha_hora": "2026-10-16T05:32:04Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 4,
+            "duracion_ms": 1000,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:04.385000+00:00",
+          "received_monotonic_ms": 14045.057
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 7,
+            "comando": "BAJAR_GRUA",
+            "codigo": 7,
+            "fecha_hora": "2026-10-16T05:32:07Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 5,
+            "duracion_ms": 1500,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:07.444218+00:00",
+          "received_monotonic_ms": 17104.27
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 5,
+            "comando": "RETROCEDER",
+            "codigo": 5,
+            "fecha_hora": "2026-10-16T05:32:11Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 6,
+            "duracion_ms": 2000,
+            "pausa_ms": 400,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:11.072188+00:00",
+          "received_monotonic_ms": 20732.243
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 2,
+            "comando": "AVANZAR",
+            "codigo": 2,
+            "fecha_hora": "2026-10-16T05:32:15Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 7,
+            "duracion_ms": 1000,
+            "pausa_ms": 300,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:15.274013+00:00",
+          "received_monotonic_ms": 24934.072
+        },
+        {
+          "payload": {
+            "tipo": "demo_movimiento",
+            "id_vehiculo": 1,
+            "id_comando": 5,
+            "comando": "RETROCEDER",
+            "codigo": 5,
+            "fecha_hora": "2026-10-16T05:32:18Z",
+            "conectado": false,
+            "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+            "id_demo": 1,
+            "total_movimientos": 8,
+            "orden": 8,
+            "duracion_ms": 1000,
+            "pausa_ms": 0,
+            "mensaje": null
+          },
+          "received_at_utc": "2026-10-16T05:32:18.377108+00:00",
+          "received_monotonic_ms": 28037.163
+        }
+      ],
+      "sequence_ok": false,
+      "movement_checks": [
+        {
+          "orden": 1,
+          "matches_rds": true
+        },
+        {
+          "orden": 2,
+          "matches_rds": true
+        },
+        {
+          "orden": 3,
+          "matches_rds": true
+        },
+        {
+          "orden": 4,
+          "matches_rds": true
+        },
+        {
+          "orden": 5,
+          "matches_rds": true
+        },
+        {
+          "orden": 6,
+          "matches_rds": true
+        },
+        {
+          "orden": 7,
+          "matches_rds": true
+        },
+        {
+          "orden": 8,
+          "matches_rds": true
+        }
+      ],
+      "metadata_ok": true,
+      "timing_checks": [
+        {
+          "orden": 1,
+          "expected_wait_ms": 2400,
+          "observed_gap_ms": 4205.38,
+          "respected": true
+        },
+        {
+          "orden": 2,
+          "expected_wait_ms": 1300,
+          "observed_gap_ms": 3233.079,
+          "respected": true
+        },
+        {
+          "orden": 3,
+          "expected_wait_ms": 1800,
+          "observed_gap_ms": 3584.373,
+          "respected": true
+        },
+        {
+          "orden": 4,
+          "expected_wait_ms": 1300,
+          "observed_gap_ms": 3059.213,
+          "respected": true
+        },
+        {
+          "orden": 5,
+          "expected_wait_ms": 1800,
+          "observed_gap_ms": 3627.973,
+          "respected": true
+        },
+        {
+          "orden": 6,
+          "expected_wait_ms": 2400,
+          "observed_gap_ms": 4201.829,
+          "respected": true
+        },
+        {
+          "orden": 7,
+          "expected_wait_ms": 1300,
+          "observed_gap_ms": 3103.091,
+          "respected": true
+        }
+      ],
+      "timing_tolerance_ms": 100,
+      "ok": false,
+      "demo_inicio_received": true,
+      "demo_movimientos_received": 8,
+      "demo_fin_received": false,
+      "all_n_movements_match_rds": true
+    }
+  ],
+  "errors": [
+    {
+      "phase": "verification",
+      "code": "PermissionError",
+      "message": "La verificacion real no se completo; no se repite el POST."
+    }
+  ],
+  "api_persistence_matches_fresh_rds": true,
+  "planned_wait_ms": 13300,
+  "post": {
+    "method": "POST",
+    "path": "/vehiculos/1/demos/1/iniciar",
+    "attempted_at_utc": "2026-10-16T05:31:50.340036+00:00",
+    "http_status": 202,
+    "response": {
+      "id_ejecucion": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+      "id_vehiculo": 1,
+      "id_demo": 1,
+      "total_movimientos": 8,
+      "estado": "iniciada"
+    }
+  },
+  "execution_id": "104ab595-b8ea-474d-85cb-1ffc06dd838a",
+  "history_after": {
+    "count": 6,
+    "max_id": 6,
+    "rows": [
+      {
+        "id_historial": 1,
+        "id_vehiculo": 1,
+        "id_comando": 2,
+        "fecha_hora": "2026-10-07 06:25:25",
+        "origen": "VSCODE-RDS"
+      },
+      {
+        "id_historial": 2,
+        "id_vehiculo": 1,
+        "id_comando": 1,
+        "fecha_hora": "2026-10-07 06:25:25",
+        "origen": "VSCODE-RDS"
+      },
+      {
+        "id_historial": 3,
+        "id_vehiculo": 1,
+        "id_comando": 4,
+        "fecha_hora": "2026-10-07 06:25:25",
+        "origen": "VSCODE-RDS"
+      },
+      {
+        "id_historial": 4,
+        "id_vehiculo": 1,
+        "id_comando": 7,
+        "fecha_hora": "2026-10-07 06:25:25",
+        "origen": "VSCODE-RDS"
+      },
+      {
+        "id_historial": 5,
+        "id_vehiculo": 1,
+        "id_comando": 5,
+        "fecha_hora": "2026-10-07 06:25:25",
+        "origen": "VSCODE-RDS"
+      },
+      {
+        "id_historial": 6,
+        "id_vehiculo": 1,
+        "id_comando": 2,
+        "fecha_hora": "2026-10-16 05:20:39",
+        "origen": "THUNDER_CLIENT"
+      }
+    ],
+    "sha256": "ba9ba218872d3109d3a699a453ae49911977181422b0877393d8b91270d3ffb1"
+  },
+  "history_identical": true,
+  "final_state": {
+    "id_vehiculo": 1,
+    "vehiculo": "Grúa IoT de Jack",
+    "id_comando": 5,
+    "comando": "RETROCEDER",
+    "codigo": 5,
+    "conectado": 0,
+    "fecha_actualizacion": "2026-10-16 05:32:18"
+  },
+  "final_state_matches_last_demo_command": true,
+  "connected_preserved": true,
+  "finished_at_utc": "2026-10-16T05:32:19.913052+00:00",
+  "individual_movement_posts_sent": 0,
+  "server_left_running": true,
+  "events_both_clients_ok": false,
+  "same_observed_execution_events_both_clients": true,
+  "completion_verified_both_clients": false,
+  "verification_outcome": "partial_evidence_terminal_event_not_recorded",
+  "local_failure_note": "Se produjo PermissionError durante la captura. Se conservaron inicio y ocho pasos de ambos clientes, pero no demo_fin. No se repitio el POST. La escritura local de checkpoints se hizo tolerante a bloqueos temporales para futuras verificaciones.",
+  "workbench_difference_explanation": "Una conexion nueva de la API a Amazon RDS/vehiculo_iot observa COUNT6/MAX6 y el registro6 AVANZAR. COUNT5/MAX5 de Workbench no coincide con esta lectura fresca; no se inspecciono su sesion y no se afirma su causa.",
+  "reviewed_at_utc": "2026-10-16T05:33:38.929680+00:00"
+}

@@ -1,0 +1,80 @@
+{
+  "checked_at_utc": "2026-10-16T05:05:25.680306+00:00",
+  "status": "ok",
+  "read_only": true,
+  "writes": 0,
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/health/db",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/docs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/openapi.json",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/vehiculos",
+      "status": 200,
+      "items": 1
+    },
+    {
+      "method": "GET",
+      "path": "/vehiculos/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/vehiculos/1/comandos",
+      "status": 200,
+      "items": 8
+    },
+    {
+      "method": "GET",
+      "path": "/vehiculos/1/estado",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/vehiculos/1/historial",
+      "status": 200,
+      "items": 5
+    },
+    {
+      "method": "GET",
+      "path": "/vehiculos/1/demos",
+      "status": 200,
+      "items": 1
+    },
+    {
+      "method": "GET",
+      "path": "/vehiculos/1/demos/1/movimientos",
+      "status": 200,
+      "items": 8
+    },
+    {
+      "method": "GET",
+      "path": "/vehiculos/2",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/vehiculos/2/historial",
+      "status": 404
+    }
+  ],
+  "functional_get_kinds_checked": 7,
+  "warnings": []
+}

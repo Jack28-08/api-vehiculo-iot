@@ -1,0 +1,1626 @@
+{
+  "catalog_version": 1,
+  "inspected_at_utc": "2026-10-16T04:32:46.768674+00:00",
+  "status": "complete",
+  "schema": "vehiculo_iot",
+  "read_only": true,
+  "visibility": "Objetos visibles para la cuenta utilizada; no acredita acceso global.",
+  "expected_counts": {
+    "tables": 6,
+    "procedures": 21
+  },
+  "actual_counts": {
+    "tables": 6,
+    "procedures": 21,
+    "views": 0
+  },
+  "count_checks": {
+    "tables_match": true,
+    "procedures_match": true
+  },
+  "tables": [
+    {
+      "name": "comandos",
+      "table_type": "BASE TABLE",
+      "engine": "InnoDB",
+      "columns": [
+        {
+          "name": "id_comando",
+          "ordinal_position": 1,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "auto_increment",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "id_vehiculo",
+          "ordinal_position": 2,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "nombre",
+          "ordinal_position": 3,
+          "data_type": "varchar",
+          "full_type": "varchar(60)",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci",
+          "generation_expression": ""
+        },
+        {
+          "name": "codigo",
+          "ordinal_position": 4,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "descripcion",
+          "ordinal_position": 5,
+          "data_type": "varchar",
+          "full_type": "varchar(255)",
+          "is_nullable": "YES",
+          "default_value": null,
+          "extra": "",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci",
+          "generation_expression": ""
+        },
+        {
+          "name": "activo",
+          "ordinal_position": 6,
+          "data_type": "tinyint",
+          "full_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "default_value": "1",
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "fk_comando_vehiculo",
+          "type": "FOREIGN KEY",
+          "columns": [
+            {
+              "column_name": "id_vehiculo",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": 1,
+              "referenced_schema": "vehiculo_iot",
+              "referenced_table": "vehiculos",
+              "referenced_column": "id_vehiculo"
+            }
+          ],
+          "on_update": "CASCADE",
+          "on_delete": "CASCADE"
+        },
+        {
+          "name": "PRIMARY",
+          "type": "PRIMARY KEY",
+          "columns": [
+            {
+              "column_name": "id_comando",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": null,
+              "referenced_schema": null,
+              "referenced_table": null,
+              "referenced_column": null
+            }
+          ],
+          "on_update": null,
+          "on_delete": null
+        },
+        {
+          "name": "uq_comando_codigo",
+          "type": "UNIQUE",
+          "columns": [
+            {
+              "column_name": "id_vehiculo",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": null,
+              "referenced_schema": null,
+              "referenced_table": null,
+              "referenced_column": null
+            },
+            {
+              "column_name": "codigo",
+              "ordinal_position": 2,
+              "position_in_unique_constraint": null,
+              "referenced_schema": null,
+              "referenced_table": null,
+              "referenced_column": null
+            }
+          ],
+          "on_update": null,
+          "on_delete": null
+        },
+        {
+          "name": "uq_comando_nombre",
+          "type": "UNIQUE",
+          "columns": [
+            {
+              "column_name": "id_vehiculo",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": null,
+              "referenced_schema": null,
+              "referenced_table": null,
+              "referenced_column": null
+            },
+            {
+              "column_name": "nombre",
+              "ordinal_position": 2,
+              "position_in_unique_constraint": null,
+              "referenced_schema": null,
+              "referenced_table": null,
+              "referenced_column": null
+            }
+          ],
+          "on_update": null,
+          "on_delete": null
+        }
+      ]
+    },
+    {
+      "name": "demo_movimientos",
+      "table_type": "BASE TABLE",
+      "engine": "InnoDB",
+      "columns": [
+        {
+          "name": "id_demo_movimiento",
+          "ordinal_position": 1,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "auto_increment",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "id_demo",
+          "ordinal_position": 2,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "id_comando",
+          "ordinal_position": 3,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "orden",
+          "ordinal_position": 4,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "duracion_ms",
+          "ordinal_position": 5,
+          "data_type": "int",
+          "full_type": "int unsigned",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "pausa_ms",
+          "ordinal_position": 6,
+          "data_type": "int",
+          "full_type": "int unsigned",
+          "is_nullable": "NO",
+          "default_value": "0",
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "fk_mov_comando",
+          "type": "FOREIGN KEY",
+          "columns": [
+            {
+              "column_name": "id_comando",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": 1,
+              "referenced_schema": "vehiculo_iot",
+              "referenced_table": "comandos",
+              "referenced_column": "id_comando"
+            }
+          ],
+          "on_update": "CASCADE",
+          "on_delete": "RESTRICT"
+        },
+        {
+          "name": "fk_mov_demo",
+          "type": "FOREIGN KEY",
+          "columns": [
+            {
+              "column_name": "id_demo",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": 1,
+              "referenced_schema": "vehiculo_iot",
+              "referenced_table": "demos",
+              "referenced_column": "id_demo"
+            }
+          ],
+          "on_update": "CASCADE",
+          "on_delete": "CASCADE"
+        },
+        {
+          "name": "PRIMARY",
+          "type": "PRIMARY KEY",
+          "columns": [
+            {
+              "column_name": "id_demo_movimiento",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": null,
+              "referenced_schema": null,
+              "referenced_table": null,
+              "referenced_column": null
+            }
+          ],
+          "on_update": null,
+          "on_delete": null
+        },
+        {
+          "name": "uq_demo_orden",
+          "type": "UNIQUE",
+          "columns": [
+            {
+              "column_name": "id_demo",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": null,
+              "referenced_schema": null,
+              "referenced_table": null,
+              "referenced_column": null
+            },
+            {
+              "column_name": "orden",
+              "ordinal_position": 2,
+              "position_in_unique_constraint": null,
+              "referenced_schema": null,
+              "referenced_table": null,
+              "referenced_column": null
+            }
+          ],
+          "on_update": null,
+          "on_delete": null
+        }
+      ]
+    },
+    {
+      "name": "demos",
+      "table_type": "BASE TABLE",
+      "engine": "InnoDB",
+      "columns": [
+        {
+          "name": "id_demo",
+          "ordinal_position": 1,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "auto_increment",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "id_vehiculo",
+          "ordinal_position": 2,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "nombre",
+          "ordinal_position": 3,
+          "data_type": "varchar",
+          "full_type": "varchar(80)",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci",
+          "generation_expression": ""
+        },
+        {
+          "name": "descripcion",
+          "ordinal_position": 4,
+          "data_type": "varchar",
+          "full_type": "varchar(255)",
+          "is_nullable": "YES",
+          "default_value": null,
+          "extra": "",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci",
+          "generation_expression": ""
+        },
+        {
+          "name": "activo",
+          "ordinal_position": 5,
+          "data_type": "tinyint",
+          "full_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "default_value": "1",
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "fk_demo_vehiculo",
+          "type": "FOREIGN KEY",
+          "columns": [
+            {
+              "column_name": "id_vehiculo",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": 1,
+              "referenced_schema": "vehiculo_iot",
+              "referenced_table": "vehiculos",
+              "referenced_column": "id_vehiculo"
+            }
+          ],
+          "on_update": "CASCADE",
+          "on_delete": "CASCADE"
+        },
+        {
+          "name": "PRIMARY",
+          "type": "PRIMARY KEY",
+          "columns": [
+            {
+              "column_name": "id_demo",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": null,
+              "referenced_schema": null,
+              "referenced_table": null,
+              "referenced_column": null
+            }
+          ],
+          "on_update": null,
+          "on_delete": null
+        }
+      ]
+    },
+    {
+      "name": "estado_vehiculo",
+      "table_type": "BASE TABLE",
+      "engine": "InnoDB",
+      "columns": [
+        {
+          "name": "id_estado",
+          "ordinal_position": 1,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "auto_increment",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "id_vehiculo",
+          "ordinal_position": 2,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "id_comando",
+          "ordinal_position": 3,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "YES",
+          "default_value": null,
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "fecha_actualizacion",
+          "ordinal_position": 4,
+          "data_type": "timestamp",
+          "full_type": "timestamp",
+          "is_nullable": "YES",
+          "default_value": "CURRENT_TIMESTAMP",
+          "extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "conectado",
+          "ordinal_position": 5,
+          "data_type": "tinyint",
+          "full_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "default_value": "0",
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "fk_estado_comando",
+          "type": "FOREIGN KEY",
+          "columns": [
+            {
+              "column_name": "id_comando",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": 1,
+              "referenced_schema": "vehiculo_iot",
+              "referenced_table": "comandos",
+              "referenced_column": "id_comando"
+            }
+          ],
+          "on_update": "CASCADE",
+          "on_delete": "SET NULL"
+        },
+        {
+          "name": "fk_estado_vehiculo",
+          "type": "FOREIGN KEY",
+          "columns": [
+            {
+              "column_name": "id_vehiculo",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": 1,
+              "referenced_schema": "vehiculo_iot",
+              "referenced_table": "vehiculos",
+              "referenced_column": "id_vehiculo"
+            }
+          ],
+          "on_update": "CASCADE",
+          "on_delete": "CASCADE"
+        },
+        {
+          "name": "id_vehiculo",
+          "type": "UNIQUE",
+          "columns": [
+            {
+              "column_name": "id_vehiculo",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": null,
+              "referenced_schema": null,
+              "referenced_table": null,
+              "referenced_column": null
+            }
+          ],
+          "on_update": null,
+          "on_delete": null
+        },
+        {
+          "name": "PRIMARY",
+          "type": "PRIMARY KEY",
+          "columns": [
+            {
+              "column_name": "id_estado",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": null,
+              "referenced_schema": null,
+              "referenced_table": null,
+              "referenced_column": null
+            }
+          ],
+          "on_update": null,
+          "on_delete": null
+        }
+      ]
+    },
+    {
+      "name": "historial_comandos",
+      "table_type": "BASE TABLE",
+      "engine": "InnoDB",
+      "columns": [
+        {
+          "name": "id_historial",
+          "ordinal_position": 1,
+          "data_type": "bigint",
+          "full_type": "bigint",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "auto_increment",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "id_vehiculo",
+          "ordinal_position": 2,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "id_comando",
+          "ordinal_position": 3,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "YES",
+          "default_value": null,
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "fecha_hora",
+          "ordinal_position": 4,
+          "data_type": "timestamp",
+          "full_type": "timestamp",
+          "is_nullable": "YES",
+          "default_value": "CURRENT_TIMESTAMP",
+          "extra": "DEFAULT_GENERATED",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "origen",
+          "ordinal_position": 5,
+          "data_type": "varchar",
+          "full_type": "varchar(30)",
+          "is_nullable": "NO",
+          "default_value": "MANUAL",
+          "extra": "",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci",
+          "generation_expression": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "fk_historial_comando",
+          "type": "FOREIGN KEY",
+          "columns": [
+            {
+              "column_name": "id_comando",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": 1,
+              "referenced_schema": "vehiculo_iot",
+              "referenced_table": "comandos",
+              "referenced_column": "id_comando"
+            }
+          ],
+          "on_update": "CASCADE",
+          "on_delete": "SET NULL"
+        },
+        {
+          "name": "fk_historial_vehiculo",
+          "type": "FOREIGN KEY",
+          "columns": [
+            {
+              "column_name": "id_vehiculo",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": 1,
+              "referenced_schema": "vehiculo_iot",
+              "referenced_table": "vehiculos",
+              "referenced_column": "id_vehiculo"
+            }
+          ],
+          "on_update": "CASCADE",
+          "on_delete": "CASCADE"
+        },
+        {
+          "name": "PRIMARY",
+          "type": "PRIMARY KEY",
+          "columns": [
+            {
+              "column_name": "id_historial",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": null,
+              "referenced_schema": null,
+              "referenced_table": null,
+              "referenced_column": null
+            }
+          ],
+          "on_update": null,
+          "on_delete": null
+        }
+      ]
+    },
+    {
+      "name": "vehiculos",
+      "table_type": "BASE TABLE",
+      "engine": "InnoDB",
+      "columns": [
+        {
+          "name": "id_vehiculo",
+          "ordinal_position": 1,
+          "data_type": "int",
+          "full_type": "int",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "auto_increment",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "nombre",
+          "ordinal_position": 2,
+          "data_type": "varchar",
+          "full_type": "varchar(80)",
+          "is_nullable": "NO",
+          "default_value": null,
+          "extra": "",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci",
+          "generation_expression": ""
+        },
+        {
+          "name": "modelo",
+          "ordinal_position": 3,
+          "data_type": "varchar",
+          "full_type": "varchar(80)",
+          "is_nullable": "YES",
+          "default_value": null,
+          "extra": "",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci",
+          "generation_expression": ""
+        },
+        {
+          "name": "descripcion",
+          "ordinal_position": 4,
+          "data_type": "varchar",
+          "full_type": "varchar(255)",
+          "is_nullable": "YES",
+          "default_value": null,
+          "extra": "",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci",
+          "generation_expression": ""
+        },
+        {
+          "name": "microcontrolador",
+          "ordinal_position": 5,
+          "data_type": "varchar",
+          "full_type": "varchar(50)",
+          "is_nullable": "YES",
+          "default_value": null,
+          "extra": "",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci",
+          "generation_expression": ""
+        },
+        {
+          "name": "fecha_registro",
+          "ordinal_position": 6,
+          "data_type": "timestamp",
+          "full_type": "timestamp",
+          "is_nullable": "YES",
+          "default_value": "CURRENT_TIMESTAMP",
+          "extra": "DEFAULT_GENERATED",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        },
+        {
+          "name": "activo",
+          "ordinal_position": 7,
+          "data_type": "tinyint",
+          "full_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "default_value": "1",
+          "extra": "",
+          "character_set": null,
+          "collation": null,
+          "generation_expression": ""
+        }
+      ],
+      "constraints": [
+        {
+          "name": "PRIMARY",
+          "type": "PRIMARY KEY",
+          "columns": [
+            {
+              "column_name": "id_vehiculo",
+              "ordinal_position": 1,
+              "position_in_unique_constraint": null,
+              "referenced_schema": null,
+              "referenced_table": null,
+              "referenced_column": null
+            }
+          ],
+          "on_update": null,
+          "on_delete": null
+        }
+      ]
+    }
+  ],
+  "views": [],
+  "procedures": [
+    {
+      "name": "sp_actualizar_comando",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_comando",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_nombre",
+          "ordinal_position": 2,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(60)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        {
+          "name": "p_codigo",
+          "ordinal_position": 3,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_descripcion",
+          "ordinal_position": 4,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(255)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        {
+          "name": "p_activo",
+          "ordinal_position": 5,
+          "mode": "IN",
+          "data_type": "tinyint",
+          "full_type": "tinyint(1)",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_actualizar_comando`(\r\n    IN p_id_comando INT,\r\n    IN p_nombre VARCHAR(60),\r\n    IN p_codigo INT,\r\n    IN p_descripcion VARCHAR(255),\r\n    IN p_activo BOOLEAN\r\n)\nBEGIN\r\n    UPDATE comandos\r\n       SET nombre=p_nombre, codigo=p_codigo,\r\n           descripcion=p_descripcion, activo=p_activo\r\n     WHERE id_comando=p_id_comando;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_actualizar_demo",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_demo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_nombre",
+          "ordinal_position": 2,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(80)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        {
+          "name": "p_descripcion",
+          "ordinal_position": 3,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(255)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        {
+          "name": "p_activo",
+          "ordinal_position": 4,
+          "mode": "IN",
+          "data_type": "tinyint",
+          "full_type": "tinyint(1)",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_actualizar_demo`(\r\n    IN p_id_demo INT,\r\n    IN p_nombre VARCHAR(80),\r\n    IN p_descripcion VARCHAR(255),\r\n    IN p_activo BOOLEAN\r\n)\nBEGIN\r\n    UPDATE demos\r\n       SET nombre=p_nombre, descripcion=p_descripcion, activo=p_activo\r\n     WHERE id_demo=p_id_demo;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_actualizar_estado",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_vehiculo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_id_comando",
+          "ordinal_position": 2,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_conectado",
+          "ordinal_position": 3,
+          "mode": "IN",
+          "data_type": "tinyint",
+          "full_type": "tinyint(1)",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_actualizar_estado`(\r\n    IN p_id_vehiculo INT,\r\n    IN p_id_comando INT,\r\n    IN p_conectado BOOLEAN\r\n)\nBEGIN\r\n    INSERT INTO estado_vehiculo(id_vehiculo,id_comando,conectado)\r\n    VALUES(p_id_vehiculo,p_id_comando,p_conectado)\r\n    ON DUPLICATE KEY UPDATE\r\n      id_comando=VALUES(id_comando),\r\n      conectado=VALUES(conectado),\r\n      fecha_actualizacion=CURRENT_TIMESTAMP;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_actualizar_movimiento_demo",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_demo_movimiento",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_id_comando",
+          "ordinal_position": 2,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_orden",
+          "ordinal_position": 3,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_duracion_ms",
+          "ordinal_position": 4,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_pausa_ms",
+          "ordinal_position": 5,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_actualizar_movimiento_demo`(\r\n    IN p_id_demo_movimiento INT,\r\n    IN p_id_comando INT,\r\n    IN p_orden INT,\r\n    IN p_duracion_ms INT,\r\n    IN p_pausa_ms INT\r\n)\nBEGIN\r\n    UPDATE demo_movimientos\r\n       SET id_comando=p_id_comando, orden=p_orden,\r\n           duracion_ms=p_duracion_ms, pausa_ms=p_pausa_ms\r\n     WHERE id_demo_movimiento=p_id_demo_movimiento;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_actualizar_vehiculo",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_vehiculo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_nombre",
+          "ordinal_position": 2,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(80)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        {
+          "name": "p_modelo",
+          "ordinal_position": 3,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(80)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        {
+          "name": "p_descripcion",
+          "ordinal_position": 4,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(255)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        {
+          "name": "p_microcontrolador",
+          "ordinal_position": 5,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(50)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        {
+          "name": "p_activo",
+          "ordinal_position": 6,
+          "mode": "IN",
+          "data_type": "tinyint",
+          "full_type": "tinyint(1)",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_actualizar_vehiculo`(\r\n    IN p_id_vehiculo INT,\r\n    IN p_nombre VARCHAR(80),\r\n    IN p_modelo VARCHAR(80),\r\n    IN p_descripcion VARCHAR(255),\r\n    IN p_microcontrolador VARCHAR(50),\r\n    IN p_activo BOOLEAN\r\n)\nBEGIN\r\n    UPDATE vehiculos\r\n       SET nombre=p_nombre, modelo=p_modelo, descripcion=p_descripcion,\r\n           microcontrolador=p_microcontrolador, activo=p_activo\r\n     WHERE id_vehiculo=p_id_vehiculo;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_agregar_movimiento_demo",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_demo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_id_comando",
+          "ordinal_position": 2,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_orden",
+          "ordinal_position": 3,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_duracion_ms",
+          "ordinal_position": 4,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_pausa_ms",
+          "ordinal_position": 5,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_agregar_movimiento_demo`(\r\n    IN p_id_demo INT,\r\n    IN p_id_comando INT,\r\n    IN p_orden INT,\r\n    IN p_duracion_ms INT,\r\n    IN p_pausa_ms INT\r\n)\nBEGIN\r\n    INSERT INTO demo_movimientos\r\n      (id_demo,id_comando,orden,duracion_ms,pausa_ms)\r\n    VALUES\r\n      (p_id_demo,p_id_comando,p_orden,p_duracion_ms,p_pausa_ms);\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_crear_comando",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_vehiculo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_nombre",
+          "ordinal_position": 2,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(60)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        {
+          "name": "p_codigo",
+          "ordinal_position": 3,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_descripcion",
+          "ordinal_position": 4,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(255)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_crear_comando`(\r\n    IN p_id_vehiculo INT,\r\n    IN p_nombre VARCHAR(60),\r\n    IN p_codigo INT,\r\n    IN p_descripcion VARCHAR(255)\r\n)\nBEGIN\r\n    INSERT INTO comandos(id_vehiculo,nombre,codigo,descripcion)\r\n    VALUES(p_id_vehiculo,p_nombre,p_codigo,p_descripcion);\r\n    SELECT LAST_INSERT_ID() AS id_comando;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_crear_demo",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_vehiculo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_nombre",
+          "ordinal_position": 2,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(80)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        {
+          "name": "p_descripcion",
+          "ordinal_position": 3,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(255)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_crear_demo`(\r\n    IN p_id_vehiculo INT,\r\n    IN p_nombre VARCHAR(80),\r\n    IN p_descripcion VARCHAR(255)\r\n)\nBEGIN\r\n    INSERT INTO demos(id_vehiculo,nombre,descripcion)\r\n    VALUES(p_id_vehiculo,p_nombre,p_descripcion);\r\n    SELECT LAST_INSERT_ID() AS id_demo;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_crear_vehiculo",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_nombre",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(80)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        {
+          "name": "p_modelo",
+          "ordinal_position": 2,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(80)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        {
+          "name": "p_descripcion",
+          "ordinal_position": 3,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(255)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        },
+        {
+          "name": "p_microcontrolador",
+          "ordinal_position": 4,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(50)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_crear_vehiculo`(\r\n    IN p_nombre VARCHAR(80),\r\n    IN p_modelo VARCHAR(80),\r\n    IN p_descripcion VARCHAR(255),\r\n    IN p_microcontrolador VARCHAR(50)\r\n)\nBEGIN\r\n    INSERT INTO vehiculos(nombre, modelo, descripcion, microcontrolador)\r\n    VALUES(p_nombre, p_modelo, p_descripcion, p_microcontrolador);\r\n    SELECT LAST_INSERT_ID() AS id_vehiculo;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_eliminar_comando",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_comando",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_eliminar_comando`(IN p_id_comando INT)\nBEGIN\r\n    DELETE FROM comandos WHERE id_comando=p_id_comando;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_eliminar_demo",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_demo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_eliminar_demo`(IN p_id_demo INT)\nBEGIN\r\n    DELETE FROM demos WHERE id_demo=p_id_demo;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_eliminar_movimiento_demo",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_demo_movimiento",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_eliminar_movimiento_demo`(IN p_id_demo_movimiento INT)\nBEGIN\r\n    DELETE FROM demo_movimientos\r\n     WHERE id_demo_movimiento=p_id_demo_movimiento;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_eliminar_vehiculo",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_vehiculo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_eliminar_vehiculo`(IN p_id_vehiculo INT)\nBEGIN\r\n    DELETE FROM vehiculos WHERE id_vehiculo=p_id_vehiculo;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_obtener_comandos_vehiculo",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_vehiculo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_obtener_comandos_vehiculo`(IN p_id_vehiculo INT)\nBEGIN\r\n    SELECT * FROM comandos\r\n     WHERE id_vehiculo=p_id_vehiculo\r\n     ORDER BY codigo;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_obtener_demos",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_vehiculo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_obtener_demos`(IN p_id_vehiculo INT)\nBEGIN\r\n    SELECT * FROM demos\r\n     WHERE id_vehiculo=p_id_vehiculo\r\n     ORDER BY id_demo;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_obtener_estado",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_vehiculo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_obtener_estado`(IN p_id_vehiculo INT)\nBEGIN\r\n    SELECT e.id_vehiculo, v.nombre AS vehiculo,\r\n           e.id_comando, c.nombre AS comando, c.codigo,\r\n           e.conectado, e.fecha_actualizacion\r\n      FROM estado_vehiculo e\r\n      JOIN vehiculos v ON v.id_vehiculo=e.id_vehiculo\r\n LEFT JOIN comandos c ON c.id_comando=e.id_comando\r\n     WHERE e.id_vehiculo=p_id_vehiculo;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_obtener_historial",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_vehiculo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_obtener_historial`(IN p_id_vehiculo INT)\nBEGIN\r\n    SELECT h.id_historial, h.id_vehiculo,\r\n           c.nombre AS comando, c.codigo,\r\n           h.fecha_hora, h.origen\r\n      FROM historial_comandos h\r\n LEFT JOIN comandos c ON c.id_comando=h.id_comando\r\n     WHERE h.id_vehiculo=p_id_vehiculo\r\n     ORDER BY h.fecha_hora DESC, h.id_historial DESC;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_obtener_movimientos_demo",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_demo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_obtener_movimientos_demo`(IN p_id_demo INT)\nBEGIN\r\n    SELECT dm.id_demo_movimiento, dm.orden,\r\n           dm.id_comando, c.nombre AS comando, c.codigo,\r\n           dm.duracion_ms, dm.pausa_ms\r\n      FROM demo_movimientos dm\r\n      JOIN comandos c ON c.id_comando=dm.id_comando\r\n     WHERE dm.id_demo=p_id_demo\r\n     ORDER BY dm.orden;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_obtener_vehiculo",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_vehiculo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_obtener_vehiculo`(IN p_id_vehiculo INT)\nBEGIN\r\n    SELECT * FROM vehiculos WHERE id_vehiculo = p_id_vehiculo;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_obtener_vehiculos",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_obtener_vehiculos`()\nBEGIN\r\n    SELECT * FROM vehiculos ORDER BY id_vehiculo;\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    },
+    {
+      "name": "sp_registrar_historial",
+      "sql_data_access": "CONTAINS SQL",
+      "security_type": "DEFINER",
+      "is_deterministic": "NO",
+      "parameters": [
+        {
+          "name": "p_id_vehiculo",
+          "ordinal_position": 1,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_id_comando",
+          "ordinal_position": 2,
+          "mode": "IN",
+          "data_type": "int",
+          "full_type": "int",
+          "character_set": null,
+          "collation": null
+        },
+        {
+          "name": "p_origen",
+          "ordinal_position": 3,
+          "mode": "IN",
+          "data_type": "varchar",
+          "full_type": "varchar(30)",
+          "character_set": "utf8mb4",
+          "collation": "utf8mb4_0900_ai_ci"
+        }
+      ],
+      "parameter_metadata_status": "visible_metadata",
+      "definition": {
+        "available": true,
+        "sql": "CREATE PROCEDURE `sp_registrar_historial`(\r\n    IN p_id_vehiculo INT,\r\n    IN p_id_comando INT,\r\n    IN p_origen VARCHAR(30)\r\n)\nBEGIN\r\n    INSERT INTO historial_comandos(id_vehiculo,id_comando,origen)\r\n    VALUES(p_id_vehiculo,p_id_comando,p_origen);\r\nEND",
+        "redactions": [
+          "Cuenta DEFINER omitida."
+        ],
+        "unavailable_reason": null
+      }
+    }
+  ],
+  "warnings": [],
+  "error": null
+}
