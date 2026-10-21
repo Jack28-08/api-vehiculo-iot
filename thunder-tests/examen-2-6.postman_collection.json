@@ -1,0 +1,246 @@
+{
+  "info": {
+    "_postman_id": "e2600000-2026-4000-8000-000000000001",
+    "name": "Examen 2.6 - HTTP manual (NO Run All)",
+    "description": "Plantilla HTTP importable en Thunder Client mediante Postman 2.1.0. No ejecutada en Thunder. Confirmar licencia y destino propio. GET de descubrimiento primero. POST individuales agregan historial; DEMO modifica estado. WSS se abre manualmente en dos clientes independientes. Ver docs/thunder_client.md. NO ejecutar todo ni exportar claves privadas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "A - Lecturas y seleccion de IDs reales",
+      "item": [
+        {
+          "name": "01 Salud API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health",
+            "description": "200 status ok; no demuestra RDS."
+          },
+          "response": []
+        },
+        {
+          "name": "02 Salud RDS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health/db",
+            "description": "200 si RDS disponible; 503 seguro si falla."
+          },
+          "response": []
+        },
+        {
+          "name": "03 Swagger publico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/docs",
+            "description": "200 HTML; verificar certificado HTTPS en navegador."
+          },
+          "response": []
+        },
+        {
+          "name": "04 Listar vehiculos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/vehiculos",
+            "description": "Elegir ID real y activo; no asumir ID de 2.5."
+          },
+          "response": []
+        },
+        {
+          "name": "05 Obtener vehiculo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/vehiculos/{{idVehiculo}}",
+            "description": "Vehiculo existente; 404 si no existe."
+          },
+          "response": []
+        },
+        {
+          "name": "06 Catalogo de comandos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/vehiculos/{{idVehiculo}}/comandos",
+            "description": "Elegir idComando activo del mismo vehiculo."
+          },
+          "response": []
+        },
+        {
+          "name": "07 Estado actual",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/vehiculos/{{idVehiculo}}/estado",
+            "description": "Contrastar con estado_inicial de dos WSS y lectura RDS."
+          },
+          "response": []
+        },
+        {
+          "name": "08 Historial publico (prueba 2)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/vehiculos/{{idVehiculo}}/historial",
+            "description": "De cero a diez filas; fecha_hora DESC e id_historial DESC. No demuestra historial completo si hay mas de diez."
+          },
+          "response": []
+        },
+        {
+          "name": "09 DEMO disponibles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/vehiculos/{{idVehiculo}}/demos",
+            "description": "Elegir idDemo activo del mismo vehiculo."
+          },
+          "response": []
+        },
+        {
+          "name": "10 Plan real de DEMO",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/vehiculos/{{idVehiculo}}/demos/{{idDemo}}/movimientos",
+            "description": "Guardar N, orden, comandos, duracion_ms y pausa_ms reales."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "B - Escrituras manuales autorizadas (NO Run All)",
+      "item": [
+        {
+          "name": "11 Prueba 1 - UN movimiento individual",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKeyOperator}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/vehiculos/{{idVehiculo}}/movimientos",
+            "description": "ESCRITURA REAL. Conectar antes dos WSS. Ejecutar una sola vez. 200, evento en ambos y una fila persistida de historial. No repetir automaticamente.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_comando\": {{idComando}},\n  \"origen\": \"examen-2.6-thunder\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12 Prueba 3 - Iniciar UNA DEMO",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKeyOperator}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/vehiculos/{{idVehiculo}}/demos/{{idDemo}}/iniciar",
+            "description": "ESCRITURA REAL DE ESTADO. Snapshot completo del historial y dos WSS antes. Esperar 202+UUID, inicio+N pasos+fin. Durante tarea activa, segundo intento manual del mismo vehiculo debe responder409. No ejecutar cuando se desconozca si ya esta activa."
+          },
+          "response": []
+        },
+        {
+          "name": "13 Cancelar (ejecucion separada)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKeyOperator}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/vehiculos/{{idVehiculo}}/demos/{{idDemo}}/cancelar",
+            "description": "CONTROL REAL. Para prueba separada de cancelacion, registrar UUID. 200 tras esperar operacion RDS en curso; no nuevos pasos del UUID despues de confirmar."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "C - Rechazo sin credencial",
+      "item": [
+        {
+          "name": "14 POST sin clave debe devolver401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/vehiculos/{{idVehiculo}}/movimientos",
+            "description": "Sin X-API-Key: debe rechazar antes de acceder a RDS, sin escritura.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_comando\": {{idComando}},\n  \"origen\": \"examen-2.6-thunder\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://184-72-72-255.sslip.io",
+      "type": "string",
+      "description": "Hostname elegido por el alumno; HTTPS aun debe desplegarse y comprobarse."
+    },
+    {
+      "key": "idVehiculo",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idComando",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idDemo",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idOtroVehiculo",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "apiKeyOperator",
+      "value": "",
+      "type": "string",
+      "description": "Solo entorno local privado; no guardar valor en este archivo."
+    }
+  ]
+}

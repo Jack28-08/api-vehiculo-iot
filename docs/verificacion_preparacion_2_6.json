@@ -1,0 +1,99 @@
+{
+  "scope": "Preparacion local 2.6, no despliegue EC2 ni nuevas pruebas publicas",
+  "checked_at_utc": "2026-10-21T03:43:05.739862+00:00",
+  "client_local_date": "2026-10-20",
+  "status": "local_preparation_validated_remote_execution_pending",
+  "patch_git_apply_check": "passed_before_manual_integration; Windows integrated manually without Linux alternatives",
+  "git_root_exclusive": true,
+  "origin": "https://github.com/Jack28-08/api-vehiculo-iot.git",
+  "unit_tests": {
+    "tests_run": 146,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "external_or_rds_attempts": 0
+  },
+  "baseline_2_5_tests_preserved": 124,
+  "powershell": {
+    "checked_at_utc": "2026-10-21T03:41:17.5467766Z",
+    "powershell_version": "5.1.26100.9711",
+    "parser": [
+      {
+        "script": "Windows-ServiceCommon.ps1",
+        "parser_errors": 0
+      },
+      {
+        "script": "Install-ApiService.ps1",
+        "parser_errors": 0
+      },
+      {
+        "script": "Install-CaddyService.ps1",
+        "parser_errors": 0
+      }
+    ],
+    "guards": [
+      {
+        "script": "Install-ApiService.ps1",
+        "refused_without_install_switch": true
+      },
+      {
+        "script": "Install-CaddyService.ps1",
+        "refused_without_install_switch": true
+      }
+    ],
+    "services_installed": 0,
+    "acl_changes": 0,
+    "firewall_changes": 0,
+    "rds_connections": 0,
+    "public_https_wss_tested": false
+  },
+  "caddy": {
+    "version": "2.11.7",
+    "official_asset_digest_verified": true,
+    "archive_sha256": "0a1edc0b799512051c57071ce0e798d3f2cf67dc98171366f1d2b326072e3b06",
+    "executable_sha256": "5f93a9bd555f3aac9d33af2756ba14b3519d8cca4ffd55256bdaeab444c9db2a",
+    "adapt_exit_code": 0,
+    "validate_exit_code": 0,
+    "run_executed": false,
+    "storage_for_validation": "temporary private Git directory",
+    "certificate_requested": false
+  },
+  "dns": {
+    "selected_by_user": "184-72-72-255.sslip.io",
+    "a_record": "184.72.72.255",
+    "resolution_checked": true,
+    "https_wss_checked": false
+  },
+  "thunder": {
+    "registered_version": "3.0.0",
+    "account_or_plan_session_checked": false,
+    "websocket_ui_tested": false,
+    "collection_format": "Postman 2.1.0",
+    "http_requests": 14,
+    "imported_in_ui": false
+  },
+  "study": {
+    "stored_procedures": 21,
+    "parameters": 52,
+    "requirements_matrix_rows": 24
+  },
+  "old_evidence_and_user_contract_changes_preserved_byte_for_byte": true,
+  "user_files_intentionally_not_staged": [
+    "docs/contrato_rds.json",
+    "docs/contrato_rds.md"
+  ],
+  "real_database_connections_from_this_preparation": 0,
+  "real_control_posts_from_this_preparation": 0,
+  "pc_services_installed": 0,
+  "pc_acl_changes": 0,
+  "pc_firewall_changes": 0,
+  "ec2_state_source": "Reported by user from captures: RDS connectivity, 6 tables,21 SP, manual API, 124 isolated tests; not independently observed here",
+  "pending": [
+    "Execute installers in EC2 and check LocalService permissions",
+    "Issue and verify public certificate, HTTPS, WSS and external access",
+    "Verify persistence after RDP logout and EC2 reboot",
+    "Run real public read/write scenarios and three Thunder Client tests",
+    "Remove only public TCP8000 SG rule after proxy works",
+    "Capture actual evidence, finish editable Word/PDF and handwritten notes"
+  ]
+}

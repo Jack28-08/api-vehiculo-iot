@@ -1,6 +1,6 @@
 # API Vehículo IoT — práctica 2.5
 
-API local con FastAPI, POO y los **21 procedimientos almacenados** existentes de `vehiculo_iot` en Amazon RDS. Incluye 20 endpoints HTTP para salud y recursos, WebSocket de monitoreo y tres POST para iniciar DEMO, cancelar y detener lógicamente. Los eventos confirman operaciones de RDS; no acreditan actuación física del microcontrolador.
+API con FastAPI, POO y los **21 procedimientos almacenados** existentes de `vehiculo_iot` en Amazon RDS. Incluye siete GET de negocio, trece POST originales, tres POST de control y dos GET de salud (25 operaciones HTTP), además del WebSocket por vehículo. Los eventos confirman operaciones de RDS; no acreditan actuación física del microcontrolador.
 
 ## Preparar el entorno en PowerShell
 
@@ -53,7 +53,7 @@ La inspección previa real encontró **6 tablas, 34 columnas, 18 restricciones P
 
 El [mapa de endpoints y SP](docs/mapa_endpoints_sp.md) detalla las 21 correspondencias. La [guía de arquitectura HTTP](docs/arquitectura_http.md) explica las clases, validaciones, transacciones, resultados con JOIN y decisiones de concurrencia. El historial HTTP devuelve como máximo diez registros; todos permanecen en RDS. Las actualizaciones mediante POST reemplazan los campos editables completos; los opcionales omitidos se escriben como `NULL`.
 
-Ejecuta las **124 pruebas aisladas**, sin necesitar conexión a RDS:
+Ejecuta las pruebas aisladas, sin necesitar conexión a RDS. Se conservan las **124 del baseline 2.5** y se añaden las comprobaciones de preparación de 2.6:
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
@@ -62,8 +62,9 @@ Ejecuta las **124 pruebas aisladas**, sin necesitar conexión a RDS:
 Solo cuando RDS esté disponible y el servidor iniciado, puedes ejecutar las comprobaciones reales de lectura:
 
 ```powershell
-.\.venv\Scripts\python.exe -m scripts.check_http_reads
-.\.venv\Scripts\python.exe -m scripts.check_websocket_reads
+$marcaVerificacionIoT = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
+.\.venv\Scripts\python.exe -m scripts.check_http_reads --base-url http://127.0.0.1:8000 --output ".\evidencias\get-$marcaVerificacionIoT.json"
+.\.venv\Scripts\python.exe -m scripts.check_websocket_reads --base-url http://127.0.0.1:8000 --output ".\evidencias\ws-$marcaVerificacionIoT.json"
 ```
 
 Las pruebas aisladas utilizan dobles locales, incluidas autenticación, pertenencia, reversión del movimiento si falla el segundo SP y guardado del verificador. El script HTTP realiza GET contra la API y RDS; no ejecuta POST. `/health` y `/docs` pueden utilizarse con RDS detenido; las operaciones que necesitan la base responden `503` cuando no está disponible.
@@ -83,3 +84,13 @@ Los POST nuevos (sin cuerpo) son `/vehiculos/{id_vehiculo}/demos/{id_demo}/inici
 Cancelar interrumpe esperas y espera cualquier operación RDS en curso antes de confirmar. DETENER es lógico: no inventa códigos ni afirma una parada física. `conectado` conserva su valor almacenado. Consulta [el protocolo, eventos, ejemplos y clases](docs/websocket.md).
 
 Las carpetas separan responsabilidades: `models` define contratos; `repositories` accede a SP; `services` decide reglas, transacciones y tareas; `routes` adapta HTTP/WebSocket; `database` gestiona recursos; `config` y `security.py` leen configuración. `runtime.py` comparte el coordinador y los gestores. Los scripts están en `scripts`, las pruebas en `tests` y las explicaciones en `docs`.
+
+## Examen 2.6: EC2 Windows, HTTPS y WSS
+
+La [guía de operación en EC2 Windows](docs/operacion_ec2_windows.md) contiene actualización segura, instalación de la API con WinSW como `LocalService`, Caddy con binarios oficiales verificados, certificados persistentes y pruebas públicas. Los instaladores de [deploy/windows](deploy/windows/README.md) se ejecutan únicamente dentro de Windows Server, con `-InstallOnThisServer`; no cambian servicios, ACL ni firewall de la PC de desarrollo. Se mantiene un worker Uvicorn sin reload en loopback; Caddy publica HTTPS/WSS.
+
+El hostname elegido es `184-72-72-255.sslip.io`, cuyo DNS se comprobó hacia la IP elástica. La configuración y los comandos están preparados: **eso no acredita que HTTPS/WSS, los servicios ni el certificado estén funcionando en EC2**. Los resultados realmente comprobados y los pendientes se detallan en la [matriz del examen](docs/examen_2_6.md) y la [validación de preparación](docs/verificacion_preparacion_2_6.json).
+
+Los verificadores aceptan el destino, IDs reales y archivos nuevos; ya no hay que editar localhost ni asumir un historial de seis filas. Consultar `python -m scripts.verify_public --help`. Las escrituras requieren habilitación explícita, identifican cada operación y leen claves privadas sin imprimirlas. Conservar las evidencias 2.5; las nuevas se guardan en un directorio local excluido de Git y se revisan antes de publicarlas. Después de un reinicio, los clientes se reconectan al último estado persistido; no se reanudan sockets ni tareas DEMO en memoria.
+
+La [guía Thunder Client](docs/thunder_client.md) y la colección HTTP preparada distinguen las tres pruebas exigidas de las verificaciones técnicas con Python. La [guía de los 21 SP](docs/guia_estudio_21_sp.md) sirve como base para los apuntes manuscritos. Las capturas, el Word editable y su PDF deben reflejar la ejecución real, sin inventar resultados.

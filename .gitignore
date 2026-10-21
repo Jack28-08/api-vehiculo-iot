@@ -58,3 +58,13 @@ temp/
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Paquete recibido para preparar 2.6; no forma parte del producto publicado.
+/apoyo-examen-2-6/
+
+# Evidencias nuevas y datos privados del despliegue se revisan antes de publicar.
+/evidencias/
+*.sddl
+*.download
+/thunder-tests/environments/
+/thunder-tests/*.local.*

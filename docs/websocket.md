@@ -125,8 +125,9 @@ Los UUID separan ejecuciones: la limpieza de una tarea anterior no puede liberar
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 # Con el servidor local iniciado, solo lecturas reales:
-.\.venv\Scripts\python.exe -m scripts.check_http_reads
-.\.venv\Scripts\python.exe -m scripts.check_websocket_reads
+$marcaVerificacionIoT = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
+.\.venv\Scripts\python.exe -m scripts.check_http_reads --base-url http://127.0.0.1:8000 --output ".\evidencias\get-$marcaVerificacionIoT.json"
+.\.venv\Scripts\python.exe -m scripts.check_websocket_reads --base-url http://127.0.0.1:8000 --output ".\evidencias\ws-$marcaVerificacionIoT.json"
 ```
 
 Las suites `test_realtime` y `test_realtime_routes` aíslan las escrituras: prueban dos monitores, aislamiento, orden inicial/commit, rollback sin éxito, clientes lentos, errores, reconexión, N variable, ausencia de historial, inicios concurrentes, cancelación durante duración/pausa/RDS, falta de pasos posteriores, prioridad de DETENER y limpieza al cerrar.
