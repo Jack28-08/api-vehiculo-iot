@@ -1,0 +1,56 @@
+{
+  "fecha_utc": "2026-10-28T16:00:46.549897+00:00",
+  "base_commit": "360e054dce4e9c9dfa32250ba40db3435a17389c",
+  "entorno": {
+    "sistema": "Linux",
+    "python": "3.12.14",
+    "dependencias": {
+      "fastapi": "0.143.2",
+      "pydantic": "2.14.1",
+      "mysql-connector-python": "26.7.0",
+      "starlette": "1.8.0"
+    }
+  },
+  "pruebas": {
+    "comando": "python -m unittest discover -s tests -v",
+    "total": 157,
+    "aprobadas": 151,
+    "omitidas": 6,
+    "fallos": 0,
+    "errores": 0,
+    "segundos": 1.726,
+    "motivo_omitidas": "Pruebas de despliegue que requieren Windows PowerShell 5.1"
+  },
+  "contrato_http": {
+    "identico_al_baseline": true,
+    "operaciones": 25,
+    "sha256_openapi_canonico": "72f476b2373529bdc0fdc55692ac95b61b02892422be7bb87996dd2cc5051ae2"
+  },
+  "demostracion_local": {
+    "modo": "local_sin_rds",
+    "ejecuciones": [
+      {
+        "clase": "MovimientoIndividual",
+        "estado": {
+          "id_vehiculo": 1,
+          "id_comando": 2,
+          "conectado": false
+        },
+        "registro_historial": true,
+        "total_historial": 1
+      },
+      {
+        "clase": "MovimientoDeDemo",
+        "estado": {
+          "id_vehiculo": 1,
+          "id_comando": 2,
+          "conectado": false
+        },
+        "registro_historial": false,
+        "total_historial": 1
+      }
+    ],
+    "historial_total": 1
+  },
+  "alcance": "Verificación aislada en Linux. No se conectó a RDS, no se probó la URL pública y no se reiniciaron servicios EC2."
+}

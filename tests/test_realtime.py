@@ -7,7 +7,7 @@ import json
 import threading
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from app.database.connection import DatabaseUnavailableError
 from app.errors import ApplicationError
@@ -254,6 +254,21 @@ class DemoRuntimeTests(unittest.IsolatedAsyncioTestCase):
                 await until(lambda: not self.runtime.demos.tasks)
                 self.assertFalse(self.runtime.demos.tasks)
         self.assertFalse(hasattr(self.data, "registrar_historial"))
+
+    async def test_terminal_event_is_published_after_releasing_the_vehicle(self):
+        observed = []
+        publish = self.runtime.demos._publish
+
+        def observe(event):
+            if event.tipo == "demo_fin":
+                observed.append(self.runtime.coordinator.get_active(event.id_vehiculo))
+            return publish(event)
+
+        with patch.object(self.runtime.demos, "_publish", side_effect=observe):
+            start = await self.start()
+            await until(lambda: any(e["tipo"] == "demo_fin" and e["id_ejecucion"] == start["id_ejecucion"]
+                                    for e in self.socket.sent))
+        self.assertEqual(observed, [None])
 
     async def test_concurrent_starts_only_one_reservation_and_other_vehicle_available(self):
         self.data.duration = 60_000

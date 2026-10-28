@@ -154,8 +154,11 @@ class DemoExecutionManager:
             kind = {"finalizada": "demo_fin", "cancelada": "demo_cancelada", "error": "demo_error"}[outcome]
             message = "No se pudo completar la DEMO." if outcome == "error" else None
             event = self._event(execution, kind, mensaje=message)
-            self._publish(event)
+            # Al observar el desenlace, el vehículo ya debe estar disponible.
+            # Se mantiene el mutex hasta encolar el evento: una ejecución nueva
+            # no puede publicar su inicio antes del desenlace de la anterior.
             self.coordinator.clear_if_owner(identifier, execution.id_ejecucion)
+            self._publish(event)
 
     async def _cancel_execution(self, execution):
         execution.cancel_requested.set()

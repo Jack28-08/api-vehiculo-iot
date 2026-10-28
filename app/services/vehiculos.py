@@ -3,6 +3,7 @@
 from typing import Any
 
 from app.database.connection import MySQLConnectionManager
+from app.domain import Comando, Vehiculo
 from app.errors import ApplicationError
 from app.models.vehiculos import (
     ComandoActualizar, ComandoCrear, ComandoRespuesta,
@@ -12,6 +13,7 @@ from app.models.vehiculos import (
     VehiculoActualizar, VehiculoCrear, VehiculoRespuesta,
 )
 from app.repositories.vehiculos import VehiculoRepository
+from app.services.movimientos import MovimientoIndividual
 
 
 class VehiculoService:
@@ -210,28 +212,18 @@ class VehiculoService:
 
     def ejecutar_movimiento(self, id_vehiculo: int, data: MovimientoEjecutar) -> MovimientoConfirmado:
         with self.manager.transaction() as connection:
-            vehicle = self._vehiculo(connection, id_vehiculo, lock=True)
-            if not vehicle["activo"]:
-                raise ApplicationError(409, "El vehículo está inactivo.", "inactive_vehicle")
-            command = self._comando(connection, id_vehiculo, data.id_comando, lock=True)
-            if not command["activo"]:
-                raise ApplicationError(409, "El comando está inactivo.", "inactive_command")
-            # Lectura con bloqueo: conserva el valor actual incluso con conexiones concurrentes.
-            previous = self.repository.bloquear_estado(connection, id_vehiculo)
-            connected = bool(previous["conectado"]) if previous is not None else False
-            self.repository.actualizar_estado(connection, id_vehiculo, data.id_comando, connected)
-            history_id = self.repository.registrar_historial(
-                connection, id_vehiculo, data.id_comando, data.origen,
+            vehicle = Vehiculo.desde_fila(self._vehiculo(connection, id_vehiculo, lock=True))
+            vehicle.exigir_activo()
+            command = Comando.desde_fila(
+                self._comando(connection, id_vehiculo, data.id_comando, lock=True),
             )
-            state = self.repository.obtener_estado(connection, id_vehiculo)
-            history_rows = self.repository.obtener_historial(connection, id_vehiculo)
-            history = next((r for r in history_rows if r["id_historial"] == history_id), None)
-            if state is None or history is None:
-                raise ApplicationError(500, "No se pudo confirmar el movimiento.", "result_missing")
+            movement = MovimientoIndividual(vehicle, command, data.origen)
+            confirmed = movement.ejecutar(self.repository, connection)
             result = MovimientoConfirmado(
                 id_vehiculo=id_vehiculo, id_comando=data.id_comando, origen=data.origen,
-                conectado=connected, estado=EstadoRespuesta.model_validate(state),
-                historial=HistorialRespuesta.model_validate(history),
+                conectado=confirmed.conectado,
+                estado=EstadoRespuesta.model_validate(confirmed.estado),
+                historial=HistorialRespuesta.model_validate(confirmed.historial),
             )
         # CoordinatedVehiculoService publica este resultado DESPUÉS del commit,
         # sin deshacer ni repetir una transacción si un monitor se desconecta.

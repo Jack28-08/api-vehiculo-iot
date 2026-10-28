@@ -9,38 +9,50 @@ from app.errors import ApplicationError
 from app.routes.vehiculos import IdRuta
 from app.runtime import runtime
 
-router = APIRouter()
 
+class WebSocketController:
+    """Controlador instanciado: sus métodos enlazados atienden las rutas."""
 
-@router.websocket("/ws/vehiculos/{id_vehiculo}")
-async def monitor_vehicle(websocket: WebSocket, id_vehiculo: IdRuta):
-    await websocket.accept()
-    client = None
-    registration = asyncio.create_task(asyncio.to_thread(runtime.subscribe, websocket, id_vehiculo))
-    try:
-        client = await asyncio.shield(registration)
-        while True:
-            message = await websocket.receive()
-            if message["type"] == "websocket.disconnect":
-                break
-            # Monitor solamente: ni texto ni JSON del cliente producen comandos o escrituras.
-    except asyncio.CancelledError:
+    def __init__(self) -> None:
+        self._router = APIRouter()
+        self._router.add_api_websocket_route("/ws/vehiculos/{id_vehiculo}", self.monitor_vehicle)
+
+    @property
+    def router(self) -> APIRouter:
+        return self._router
+
+    async def monitor_vehicle(self, websocket: WebSocket, id_vehiculo: IdRuta):
+        await websocket.accept()
+        client = None
+        registration = asyncio.create_task(asyncio.to_thread(runtime.subscribe, websocket, id_vehiculo))
         try:
             client = await asyncio.shield(registration)
-        except Exception:
+            while True:
+                message = await websocket.receive()
+                if message["type"] == "websocket.disconnect":
+                    break
+                # Monitor solamente: ni texto ni JSON del cliente producen comandos o escrituras.
+        except asyncio.CancelledError:
+            try:
+                client = await asyncio.shield(registration)
+            except Exception:
+                pass
+            raise
+        except WebSocketDisconnect:
             pass
-        raise
-    except WebSocketDisconnect:
-        pass
-    except ApplicationError:
-        await websocket.close(code=4404, reason="Vehículo no encontrado.")
-    except DatabaseUnavailableError:
-        await websocket.close(code=1013, reason="Monitoreo temporalmente no disponible.")
-    except Exception:
-        try:
-            await websocket.close(code=1011, reason="No fue posible abrir el monitor.")
+        except ApplicationError:
+            await websocket.close(code=4404, reason="Vehículo no encontrado.")
+        except DatabaseUnavailableError:
+            await websocket.close(code=1013, reason="Monitoreo temporalmente no disponible.")
         except Exception:
-            pass
-    finally:
-        if client is not None:
-            await runtime.connections.disconnect(client)
+            try:
+                await websocket.close(code=1011, reason="No fue posible abrir el monitor.")
+            except Exception:
+                pass
+        finally:
+            if client is not None:
+                await runtime.connections.disconnect(client)
+
+
+controller = WebSocketController()
+router = controller.router

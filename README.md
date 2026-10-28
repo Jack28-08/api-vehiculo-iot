@@ -2,6 +2,32 @@
 
 API con FastAPI, POO y los **21 procedimientos almacenados** existentes de `vehiculo_iot` en Amazon RDS. Incluye siete GET de negocio, trece POST originales, tres POST de control y dos GET de salud (25 operaciones HTTP), además del WebSocket por vehículo. Los eventos confirman operaciones de RDS; no acreditan actuación física del microcontrolador.
 
+## Programación orientada a objetos: código y demostración
+
+La [guía de POO](docs/poo.md) permite seguir una petición de Swagger hasta las
+clases que ejecutan la operación. Incluye el diagrama de clases, una demostración
+local y un recorrido para la revisión del código.
+
+| Concepto | Implementación utilizada por la API |
+| --- | --- |
+| Objetos del dominio | [`Vehiculo`, `Comando` y `Demo`](app/domain/vehiculos.py) contienen reglas de actividad y pertenencia; sus datos son inmutables. |
+| Controladores | [`VehiculoController`](app/routes/vehiculos.py), [`DemoController`](app/routes/demos.py), [`HealthController`](app/routes/health.py) y [`WebSocketController`](app/routes/websocket.py) registran sus métodos enlazados en FastAPI. |
+| Abstracción | [`Movimiento`](app/services/movimientos.py) es una clase abstracta con un algoritmo común; `RepositorioMovimientos` declara las operaciones de datos que necesita. |
+| Herencia y polimorfismo | `MovimientoIndividual` y `MovimientoDeDemo` heredan de `Movimiento` y sobrescriben la política de historial. La ejecución individual registra historial; el paso DEMO no lo consulta ni lo inserta. Ambas clases se utilizan en los servicios reales. |
+| Encapsulación y composición | Los movimientos exponen sus entidades mediante propiedades; las entidades son inmutables. Cada servicio utiliza un gestor y un repositorio, y cada controlador administra su router. |
+
+Para comprobar las mismas clases de movimiento con un repositorio en memoria,
+sin iniciar AWS ni cargar credenciales:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.demostrar_poo
+```
+
+La salida identifica los dos tipos de movimiento: después de ambos hay **un solo
+registro de historial**. Es una demostración local de polimorfismo, separada de
+las pruebas públicas contra RDS. La refactorización conserva las rutas,
+permisos, cuerpos, respuestas y procedimientos del contrato existente.
+
 ## Preparar el entorno en PowerShell
 
 Requisitos: Python 3.14.8 y Git. Desde la carpeta del proyecto:

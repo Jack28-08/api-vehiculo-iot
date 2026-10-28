@@ -2,6 +2,10 @@
 
 Esta etapa conecta los casos de uso HTTP con los **21 SP existentes**. Las seis tablas, sus datos y las definiciones del contrato se conservan. La organización permite estudiar una regla en el servicio, comprobarla con dobles de prueba y seguir su llamada hasta el SP real.
 
+La [guía de POO](poo.md) detalla las entidades de dominio, la clase abstracta
+`Movimiento`, sus dos implementaciones y los controladores que registran
+métodos de instancia en FastAPI. Incluye una demostración local reproducible.
+
 ## Responsabilidad de cada clase y carpeta
 
 | Ubicación y componente | Responsabilidad y decisión |
@@ -11,10 +15,12 @@ Esta etapa conecta los casos de uso HTTP con los **21 SP existentes**. Las seis 
 | `ProcedureExecutor` | Ejecuta `CALL` únicamente para miembros de `Procedure`, verifica la cantidad de parámetros y envía sus valores enlazados con `%s`. Recorre y consume todos los conjuntos de resultados, incluidos los vacíos y el conjunto final sin columnas. Nunca confirma ni revierte transacciones. |
 | `VehiculoRepository` | Da nombres del dominio a las llamadas: `obtener_demos`, `actualizar_estado`, etc. Recibe la conexión del servicio y devuelve filas o identificadores. También encapsula las consultas auxiliares constantes de bloqueo y `LAST_INSERT_ID()`. No decide permisos ni hace `commit`. |
 | `VehiculoService`, en `app/services/vehiculos.py` | Implementa cada caso de uso, comprueba existencia, pertenencia y actividad, construye la respuesta y decide qué operaciones comparten una transacción. Sus dependencias se pueden sustituir para probar escrituras sin RDS. |
+| `Vehiculo`, `Comando` y `Demo`, en `app/domain/vehiculos.py` | Entidades inmutables con métodos que exigen actividad y pertenencia. Se construyen con las filas de RDS; sus reglas no dependen de FastAPI. |
+| `Movimiento`, `MovimientoIndividual` y `MovimientoDeDemo`, en `app/services/movimientos.py` | El método plantilla comparte la escritura de estado y aplica por despacho polimórfico la política de historial de cada subclase. El servicio conserva la propiedad de la transacción y la notificación sigue después del commit. |
 | `MySQLConnectionManager`, en `app/database/connection.py` | Abre conexiones independientes, aplica tiempos de espera y garantiza el intento de cierre de cursores y conexiones. `transaction()` inicia, confirma al salir correctamente y revierte ante un fallo. `readonly=True` pide a MySQL una transacción de lectura. |
 | `Settings`, en `app/config/settings.py` | Lee las cinco variables `MYSQL_*` desde entorno o `.env`, sin abrir una conexión. La contraseña utiliza `SecretStr`; la configuración no forma parte de las respuestas. |
 | `ApiKeySettings`, `Role` y dependencias de `app/security.py` | Cargan las claves secretas y distinguen operador y administrador. `require_operator` admite ambos roles; `require_admin` admite únicamente administrador. Las claves deben ser no vacías y distintas; una configuración inválida cierra el acceso con `503`. |
-| `app/routes/vehiculos.py` | Adapta parámetros y cuerpos HTTP a llamadas del servicio; declara modelos, errores, permisos y descripciones de Swagger. Los handlers usan `def`, por lo que FastAPI ejecuta el acceso síncrono en su grupo de hilos. |
+| `VehiculoController`, en `app/routes/vehiculos.py` | Instancia un router y registra sus métodos enlazados. Adapta parámetros y cuerpos HTTP a llamadas del servicio; declara modelos, errores, permisos y descripciones de Swagger. Los métodos usan `def`, por lo que FastAPI ejecuta el acceso síncrono en su grupo de hilos. |
 | `ApplicationError`, en `app/errors.py` | Representa un rechazo funcional esperado mediante código HTTP y mensaje público fijo. El servicio no necesita importar FastAPI para indicar un `404` o `409`. |
 | `app/main.py` | Compone routers y traduce errores funcionales, de validación y de MySQL a respuestas seguras. No refleja cuerpos inválidos ni mensajes completos del conector. |
 | `app/websocket/` y `app/runtime.py` | Monitores por vehículo, coordinación compartida y notificación después del commit. La ejecución DEMO se explica en [el protocolo WebSocket](websocket.md). |
