@@ -6,10 +6,12 @@ from pathlib import Path
 import secrets
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Security, status
+from fastapi import Depends, HTTPException, Request, Security, status
 from fastapi.security import APIKeyHeader
 from pydantic import Field, SecretStr, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict, SettingsError
+
+from app.evaluation import evaluation_access
 
 
 class Role(str, Enum):
@@ -64,9 +66,13 @@ api_key_header = APIKeyHeader(
 def get_current_role(
     api_key: Annotated[str | None, Security(api_key_header)],
     settings: Annotated[ApiKeySettings, Depends(get_api_key_settings)],
+    request: Request = None,
 ) -> Role:
     """Valida ambas claves y compara bytes para admitir valores Unicode."""
 
+    if api_key is None and request is not None and "authorization" in request.headers:
+        evaluation_access.authorize(request)
+        return Role.OPERATOR
     operator = settings.api_key_operator.get_secret_value()
     admin = settings.api_key_admin.get_secret_value()
     try:

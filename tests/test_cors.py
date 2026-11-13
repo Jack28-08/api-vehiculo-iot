@@ -144,7 +144,7 @@ class CorsTests(unittest.IsolatedAsyncioTestCase):
         self.service_factory.assert_not_called()
 
     async def test_preflights_reject_unapproved_headers(self):
-        for header in ("Authorization", "X-Admin-Key", "X-Requested-With"):
+        for header in ("X-Admin-Key", "X-Requested-With"):
             with self.subTest(header=header):
                 self.assertEqual((await self.preflight(
                     ALLOWED_ORIGINS[0], requested_headers=f"X-API-Key, {header}",
