@@ -48,6 +48,13 @@ class Session:
     expires_at: datetime
 
 
+@dataclass(frozen=True, slots=True)
+class EvaluationPrincipal:
+    """Capacidad de una operación concreta, nunca un rol de operador general."""
+
+    operation: str
+
+
 def utc_date(value: str) -> datetime:
     parsed = datetime.fromisoformat(value)
     if parsed.utcoffset() != timedelta(0):
@@ -133,7 +140,7 @@ class EvaluationAccess:
             self._sessions[hashlib.sha256(token.encode("ascii")).digest()] = Session(client, expires)
             return token, expires
 
-    def authorize(self, request: Request) -> None:
+    def authorize(self, request: Request) -> EvaluationPrincipal:
         operation = next((name for path, name in CONTROL_PATHS if path.fullmatch(request.scope["path"])), None)
         if request.method != "POST" or operation is None:
             raise denied(403, "Acción fuera del alcance de la evaluación.")
@@ -147,6 +154,7 @@ class EvaluationAccess:
             if session is None or session.expires_at <= now or session.client != client:
                 raise denied(401, "La sesión de evaluación no es válida.", **{"WWW-Authenticate": "Bearer"})
             self._consume(operation, client)
+            return EvaluationPrincipal(operation)
 
 
 evaluation_access = EvaluationAccess()

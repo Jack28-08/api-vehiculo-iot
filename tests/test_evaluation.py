@@ -72,13 +72,14 @@ class EvaluationTests(unittest.IsolatedAsyncioTestCase):
             "ends_at": (start + timedelta(minutes=duration)).isoformat(),
         }), encoding="utf-8")
 
-    async def call(self, method, path, *, token=None, origin=PAGES_ORIGIN, payload=None, key=None):
+    async def call(self, method, path, *, token=None, origin=PAGES_ORIGIN, payload=None,
+                   key=None, client="127.0.0.1"):
         headers = {"Origin": origin}
         if token is not None:
             headers["Authorization"] = "Bearer " + token
         if key is not None:
             headers["X-API-Key"] = key
-        return await cors_request(method, path, headers=headers, payload=payload)
+        return await cors_request(method, path, headers=headers, payload=payload, client=client)
 
     async def issue(self):
         code, headers, raw = await self.call("GET", ISSUE)
@@ -138,6 +139,14 @@ class EvaluationTests(unittest.IsolatedAsyncioTestCase):
         self.now += timedelta(minutes=3)
         self.assertEqual((await self.call("POST", MOVE, token=session["token"], payload=PAYLOAD))[0], 403)
         self.assertEqual((await self.call("POST", MOVE, key="test-isolated-operator", payload=PAYLOAD))[0], 200)
+
+    async def test_session_is_bound_to_the_peer_and_cannot_be_reused_from_another_ip(self):
+        self.window()
+        token = (await self.issue())["token"]
+        self.assertEqual((await self.call("POST", MOVE, token=token, payload=PAYLOAD,
+                                         client="192.0.2.5"))[0], 401)
+        self.service.ejecutar_movimiento.assert_not_called()
+        self.assertEqual((await self.call("POST", MOVE, token=token, payload=PAYLOAD))[0], 200)
 
     async def test_move_rate_limit_leaves_independent_stop_and_cancel_capacity(self):
         self.window()

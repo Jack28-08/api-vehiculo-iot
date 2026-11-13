@@ -24,7 +24,7 @@ UNAUTHORIZED_ORIGINS = (
 )
 
 
-async def cors_request(method, path, *, headers=None, payload=None):
+async def cors_request(method, path, *, headers=None, payload=None, client="127.0.0.1"):
     """Invoca ASGI en memoria; incluso los POST de prueba no salen del proceso."""
     messages = []
     body = json.dumps(payload).encode() if payload is not None else b""
@@ -35,7 +35,7 @@ async def cors_request(method, path, *, headers=None, payload=None):
         "raw_path": path.encode(), "query_string": b"", "root_path": "",
         "headers": [(name.lower().encode("ascii"), value.encode("latin-1"))
                     for name, value in request_headers.items()],
-        "client": ("127.0.0.1", 12345), "server": ("127.0.0.1", 8000),
+        "client": (client, 12345), "server": ("127.0.0.1", 8000),
     }
 
     async def receive():

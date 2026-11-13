@@ -11,7 +11,7 @@ from fastapi.security import APIKeyHeader
 from pydantic import Field, SecretStr, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict, SettingsError
 
-from app.evaluation import evaluation_access
+from app.evaluation import EvaluationPrincipal, evaluation_access
 
 
 class Role(str, Enum):
@@ -67,12 +67,11 @@ def get_current_role(
     api_key: Annotated[str | None, Security(api_key_header)],
     settings: Annotated[ApiKeySettings, Depends(get_api_key_settings)],
     request: Request = None,
-) -> Role:
+) -> Role | EvaluationPrincipal:
     """Valida ambas claves y compara bytes para admitir valores Unicode."""
 
     if api_key is None and request is not None and "authorization" in request.headers:
-        evaluation_access.authorize(request)
-        return Role.OPERATOR
+        return evaluation_access.authorize(request)
     operator = settings.api_key_operator.get_secret_value()
     admin = settings.api_key_admin.get_secret_value()
     try:
@@ -100,13 +99,13 @@ def get_current_role(
     )
 
 
-def require_operator(role: Annotated[Role, Depends(get_current_role)]) -> Role:
+def require_operator(role: Annotated[Role | EvaluationPrincipal, Depends(get_current_role)]) -> Role | EvaluationPrincipal:
     """Autoriza movimientos a operadores y administradores."""
 
     return role
 
 
-def require_admin(role: Annotated[Role, Depends(get_current_role)]) -> Role:
+def require_admin(role: Annotated[Role | EvaluationPrincipal, Depends(get_current_role)]) -> Role:
     """Autoriza la gestión de recursos exclusivamente al administrador."""
 
     if role is not Role.ADMIN:
