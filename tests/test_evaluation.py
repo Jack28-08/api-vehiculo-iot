@@ -81,8 +81,8 @@ class EvaluationTests(unittest.IsolatedAsyncioTestCase):
             headers["X-API-Key"] = key
         return await cors_request(method, path, headers=headers, payload=payload, client=client)
 
-    async def issue(self):
-        code, headers, raw = await self.call("GET", ISSUE)
+    async def issue(self, *, client="127.0.0.1"):
+        code, headers, raw = await self.call("GET", ISSUE, client=client)
         self.assertEqual(code, 200)
         self.assertEqual(headers["cache-control"], "no-store")
         return json.loads(raw)
@@ -140,6 +140,15 @@ class EvaluationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await self.call("POST", MOVE, token=session["token"], payload=PAYLOAD))[0], 403)
         self.assertEqual((await self.call("POST", MOVE, key="test-isolated-operator", payload=PAYLOAD))[0], 200)
 
+    async def test_replacing_active_window_revokes_old_tokens_without_waiting_for_expiry(self):
+        self.window()
+        old_token = (await self.issue())["token"]
+        self.window()
+        self.assertEqual((await self.call("POST", STOP, token=old_token))[0], 401)
+        self.runtime.demos.stop.assert_not_awaited()
+        new_token = (await self.issue())["token"]
+        self.assertEqual((await self.call("POST", STOP, token=new_token))[0], 200)
+
     async def test_session_is_bound_to_the_peer_and_cannot_be_reused_from_another_ip(self):
         self.window()
         token = (await self.issue())["token"]
@@ -172,3 +181,18 @@ class EvaluationTests(unittest.IsolatedAsyncioTestCase):
         })
         self.assertEqual(status, 200)
         self.assertIn("authorization", headers["access-control-allow-headers"].lower())
+
+    async def test_global_move_limit_across_clients_preserves_stop_and_cancel_capacity(self):
+        self.window()
+        clients = ("192.0.2.1", "192.0.2.2", "192.0.2.3", "192.0.2.4")
+        tokens = [(await self.issue(client=client))["token"] for client in clients]
+        for client, token in zip(clients[:3], tokens):
+            for _ in range(40):
+                status, _, _ = await self.call("POST", MOVE, token=token, payload=PAYLOAD, client=client)
+                self.assertEqual(status, 200)
+        client, token = clients[-1], tokens[-1]
+        status, _, _ = await self.call("POST", MOVE, token=token, payload=PAYLOAD, client=client)
+        self.assertEqual(status, 429)
+        self.assertEqual(self.service.ejecutar_movimiento.call_count, 120)
+        for path in (STOP, CANCEL):
+            self.assertEqual((await self.call("POST", path, token=token, client=client))[0], 200)
