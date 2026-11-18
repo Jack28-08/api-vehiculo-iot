@@ -27,6 +27,7 @@ class Capability(BaseModel):
     habilitado: bool
     disponible: bool
     diagonales: bool
+    demo_remota: bool
     barrera: UUID | None
     ttl_ms: int
     renovar_ms: int
@@ -56,3 +57,5 @@ class DeviceSnapshot(BaseModel):
     vigencia_ms: int
     longitudinal: Axis = 0
     lateral: Axis = 0
+    codigo: int = 0
+    pulso: int = 0

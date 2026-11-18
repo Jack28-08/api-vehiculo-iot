@@ -210,13 +210,15 @@ class VehiculoService:
             self.repository.eliminar_movimiento_demo(connection, id_demo_movimiento)
             return EliminacionRespuesta(eliminado=True, id=id_demo_movimiento)
 
-    def ejecutar_movimiento(self, id_vehiculo: int, data: MovimientoEjecutar) -> MovimientoConfirmado:
+    def ejecutar_movimiento(self, id_vehiculo: int, data: MovimientoEjecutar, *, before_execute=None) -> MovimientoConfirmado:
         with self.manager.transaction() as connection:
             vehicle = Vehiculo.desde_fila(self._vehiculo(connection, id_vehiculo, lock=True))
             vehicle.exigir_activo()
             command = Comando.desde_fila(
                 self._comando(connection, id_vehiculo, data.id_comando, lock=True),
             )
+            if before_execute is not None:
+                before_execute(command.codigo)
             movement = MovimientoIndividual(vehicle, command, data.origen)
             confirmed = movement.ejecutar(self.repository, connection)
             result = MovimientoConfirmado(

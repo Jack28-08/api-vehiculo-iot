@@ -85,7 +85,7 @@ class CorsTests(unittest.IsolatedAsyncioTestCase):
         return await cors_request("OPTIONS", "/vehiculos/1/movimientos", headers={
             "Origin": origin,
             "Access-Control-Request-Method": method,
-            "Access-Control-Request-Headers": requested_headers or "X-API-Key, Content-Type, Accept",
+            "Access-Control-Request-Headers": requested_headers or "X-API-Key, Content-Type, Accept, X-IoT-Barrier",
         })
 
     async def test_allowed_origins_can_read_health_without_database(self):
@@ -123,7 +123,7 @@ class CorsTests(unittest.IsolatedAsyncioTestCase):
                     )
                     allowed_headers = {item.strip().lower()
                                        for item in headers["access-control-allow-headers"].split(",")}
-                    self.assertTrue({"x-api-key", "content-type", "accept"} <= allowed_headers)
+                    self.assertTrue({"x-api-key", "content-type", "accept", "x-iot-barrier"} <= allowed_headers)
                     self.assertNotIn("*", allowed_headers)
         self.auth_settings.assert_not_called()
         self.service_factory.assert_not_called()

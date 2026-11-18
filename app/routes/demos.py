@@ -5,7 +5,7 @@ import asyncio
 from fastapi import APIRouter, Depends
 
 from app.models.demos import DemoExecutionResponse, LogicalStopResponse
-from app.routes.vehiculos import IdRuta, WRITE_RESPONSES
+from app.routes.vehiculos import ControlBarrier, IdRuta, WRITE_RESPONSES
 from app.runtime import runtime
 from app.security import require_operator
 
@@ -51,9 +51,10 @@ class DemoController:
     def router(self) -> APIRouter:
         return self._router
 
-    async def iniciar_demo(self, id_vehiculo: IdRuta, id_demo: IdRuta):
+    async def iniciar_demo(self, id_vehiculo: IdRuta, id_demo: IdRuta, barrier: ControlBarrier = None):
         # shield impide que el cierre del cliente deje una reserva o un worker huérfano.
-        work = runtime.track_control(asyncio.create_task(asyncio.to_thread(runtime.demos.start, id_vehiculo, id_demo)))
+        headers = {"barrier": barrier} if barrier is not None else {}
+        work = runtime.track_control(asyncio.create_task(asyncio.to_thread(runtime.demos.start, id_vehiculo, id_demo, **headers)))
         return await asyncio.shield(work)
 
     async def cancelar_demo(self, id_vehiculo: IdRuta, id_demo: IdRuta):

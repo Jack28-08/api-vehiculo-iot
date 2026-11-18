@@ -8,7 +8,7 @@ Las rutas se encuentran bajo `/vehiculos/1/control`. El navegador consulta la ca
 
 | Ruta | Cuerpo de solicitud | Resultado |
 | --- | --- | --- |
-| `GET /capacidad` | — | `habilitado`, `disponible`, `diagonales`, `barrera`, `ttl_ms`, `renovar_ms` |
+| `GET /capacidad` | — | `habilitado`, `disponible`, `diagonales`, `demo_remota`, `barrera`, `ttl_ms`, `renovar_ms` |
 | `POST /permiso` | `barrera`, `gesto`, `secuencia: 1`, `longitudinal`, `lateral` | `barrera`, `gesto`, `secuencia`, `ttl_ms`. El permiso comienza en neutral. |
 | `POST /vector` | `barrera`, `gesto`, `secuencia`, `longitudinal`, `lateral` | Mismo formato que el permiso. Actualiza la consigna y su vencimiento. |
 | `POST /liberar` | `barrera`, `gesto` | `liberado: true`, `barrera`. Descarta el permiso y gira la barrera. |
@@ -24,19 +24,25 @@ El equipo conecta al endpoint privado `/ws/dispositivos/1` con `Authorization: B
 El equipo envía `{"tipo":"latido","reto":1}` con un reto entero positivo de 32 bits que aumenta durante la conexión. Cada latido válido recibe una única respuesta con este formato:
 
 ```json
-{"tipo":"control","reto":1,"secuencia":1,"vigencia_ms":0,"longitudinal":0,"lateral":0}
+{"tipo":"control","reto":1,"secuencia":1,"vigencia_ms":0,"longitudinal":0,"lateral":0,"codigo":0,"pulso":0}
 ```
 
-La secuencia de respuesta aumenta durante el socket y es independiente de las secuencias HTTP. Si existe un permiso activo, la respuesta contiene los ejes vigentes y su tiempo restante. Si la consigna es neutral, ambos ejes y la vigencia son cero. No se reintentan consignas anteriores. Una conexión nueva invalida el permiso anterior y espera un latido antes de informar `disponible`. Un latido inválido, obsoleto o ausente cierra el canal. La presencia que muestra `disponible` procede del latido autenticado. El firmware debe validar reto, secuencia y antigüedad, y neutralizar al vencer el plazo o perder conexión. La respuesta prueba el intercambio de protocolo y la actuación física exige verificación aparte.
+La secuencia de respuesta aumenta durante el socket y es independiente de las secuencias HTTP. Un permiso activo envía ejes, tiempo restante y `codigo` y `pulso` iguales a cero. Un pulso envía ejes cero, el código de catálogo entre 1 y 8 y un `pulso` positivo creciente en el socket. Los latidos del mismo pulso conservan ese identificador. La vigencia máxima es 750 ms y el servidor nunca la calcula más allá del fin programado del pulso. En neutral los ejes, `codigo`, `pulso` y `vigencia_ms` son cero.
+
+Una conexión nueva invalida permiso y pulso y espera un latido antes de informar `disponible`. Un latido inválido, obsoleto o ausente cierra el canal. El firmware valida reto, secuencia, antigüedad y pulso, neutraliza al vencer el plazo o perder conexión y evita reactivar un pulso terminado aunque llegue en una respuesta nueva. `disponible` acredita un latido autenticado reciente. Si el equipo no recibe un pulso breve antes de vencer, no lo ejecuta en una reconexión. La actuación física exige verificación aparte.
 
 ## DETENER y operaciones existentes
 
-`POST /vehiculos/1/detener` invalida el permiso antes de esperar la cancelación de DEMO o el snapshot de RDS. El siguiente latido procesado después de invalidar recibe neutral. Una respuesta ya enviada puede estar en tránsito. El plazo local del firmware limita el efecto si falla la entrega de neutral. El HTTP 200 conserva el significado de detención lógica.
+`POST /vehiculos/1/detener` invalida permiso y pulso antes de esperar la cancelación de DEMO o el snapshot de RDS. El siguiente latido procesado después de invalidar recibe neutral. Una respuesta ya enviada puede estar en tránsito. El plazo local del firmware limita el efecto si falla la entrega de neutral. El HTTP 200 conserva el significado de detención lógica.
 
-DEMO y las mutaciones existentes conservan la coordinación por vehículo. Una DEMO o escritura activa impide adquirir un permiso. Un permiso vigente impide iniciar DEMO y ejecutar mutaciones legacy para ese vehículo. Los GET, el historial y los 21 procedimientos almacenados mantienen su contrato. Esta implementación conserva la ejecución lógica de DEMO y de los mandos auxiliares. Su actuación física a través del nuevo canal queda pendiente del firmware activo y de una validación en banco.
+Cuando el canal está habilitado, `/vehiculos/1/movimientos` y `/vehiculos/1/demos/{id}/iniciar` requieren `X-IoT-Barrier` con la barrera vigente de capacidad. Una barrera ausente o vieja devuelve 409 antes de consultar RDS. La API vuelve a comprobarla al escribir y al entregar el pulso. Los clientes autorizados en los dos orígenes CORS existentes pueden solicitar ese encabezado. Las rutas conservan cuerpos, respuestas y permisos previos.
+
+El movimiento individual usa el código confirmado del catálogo. Las duraciones nominales de los códigos 1 a 8 son 700, 900, 250, 1000, 900, 350, 1000 y 700 ms. Cada paso DEMO toma su duración y pausa del plan obtenido de RDS. La pausa deja la consigna en neutral y el paso siguiente lleva otro identificador de pulso. Inicio, cancelación, fin y error conservan sus eventos públicos. La cancelación invalida el pulso antes de esperar una escritura en curso. Una DEMO con permiso perdido termina sin reiniciar pasos en una sesión nueva. Cambiar el catálogo invalida solicitudes con su barrera anterior.
+
+La coordinación por vehículo impide que una DEMO, un pulso o un permiso de joystick válido compitan por el canal. Se conserva una fila de historial por movimiento individual confirmado y ninguna por paso DEMO. Los GET y los 21 procedimientos almacenados mantienen su contrato. Si DETENER llega mientras un commit está en proceso, ese commit puede quedar en estado e historial, pero su pulso queda invalidado.
 
 ## Configuración local y pruebas
 
-La configuración se carga de forma diferida desde el entorno del proceso y el `.env` privado que ya utiliza el backend. `IOT_CONTINUOUS_ENABLED` e `IOT_CONTINUOUS_DIAGONALS` tienen valor inicial `false`. `IOT_CONTINUOUS_DEVICE_TOKEN` es una credencial independiente, vacía por defecto. El servidor exige entre 32 y 256 caracteres ASCII sin espacios. El proceso debe reiniciarse para volver a cargar cambios. Conservar la credencial exclusivamente en el entorno privado y el equipo aprovisionado.
+La configuración se carga de forma diferida desde el entorno del proceso y el `.env` privado que ya utiliza el backend. `IOT_CONTINUOUS_ENABLED`, `IOT_CONTINUOUS_DIAGONALS` e `IOT_CONTINUOUS_REMOTE_DEMO` tienen valor inicial `false`. La última opción habilita el código 6, que inicia una DEMO autónoma del equipo y necesita confirmar que DETENER puede interrumpirla. Por defecto se rechaza el código 6 antes de registrar un movimiento y se rechaza el inicio de un plan que lo incluya. `IOT_CONTINUOUS_DEVICE_TOKEN` es una credencial independiente, vacía por defecto. El servidor exige entre 32 y 256 caracteres ASCII sin espacios. El proceso debe reiniciarse para volver a cargar cambios. Conservar la credencial exclusivamente en el entorno privado y el equipo aprovisionado.
 
-Ejecutar `python -m unittest discover -s tests -v` desde el entorno virtual. Los escenarios de control continuo usan transporte ASGI en memoria, dobles y reloj controlado. La rama deja las dos capacidades desactivadas por defecto y no acredita un despliegue ni una prueba física.
+Ejecutar `python -m unittest discover -s tests -v` desde el entorno virtual. Los escenarios usan transporte ASGI en memoria, dobles y reloj controlado. Las capacidades quedan desactivadas por defecto. Quedan pendientes el despliegue del firmware y del backend y la prueba física supervisada.

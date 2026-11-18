@@ -22,10 +22,28 @@ class CoordinatedVehiculoService:
             return operation
 
         def mutate(id_vehiculo, *args, **kwargs):
+            continuous = self.runtime.continuous
+            barrier = kwargs.pop("control_barrier", None)
+            movement = name == "ejecutar_movimiento"
+            ticket = continuous.pulse_ticket(id_vehiculo, barrier) if movement else None
             self.runtime.coordinator.ensure_available(id_vehiculo)
             with self.runtime.coordinator.lock_for(id_vehiculo), self.runtime.coordinator.legacy_mutation(id_vehiculo):
+                if ticket is not None:
+                    continuous.pulse_ticket(id_vehiculo, ticket)
+
+                    def validate_command(code):
+                        continuous.validate_pulse_ticket(id_vehiculo, ticket)
+                        continuous.validate_pulse_code(code)
+
+                    kwargs["before_execute"] = validate_command
+                elif name in {"actualizar_vehiculo", "eliminar_vehiculo", "crear_comando",
+                              "actualizar_comando", "eliminar_comando"}:
+                    # Una modificación de catálogo invalida solicitudes que vieron sus datos anteriores.
+                    continuous.stop(id_vehiculo)
                 result = operation(id_vehiculo, *args, **kwargs)
-                if name == "ejecutar_movimiento":
+                if movement:
+                    if ticket is not None:
+                        continuous.dispatch_pulse(id_vehiculo, ticket, result.estado.codigo)
                     # El servicio solo retorna después de su commit; fallos no llegan aquí.
                     try:
                         event = state_event("movimiento_individual", id_vehiculo,
@@ -45,8 +63,7 @@ class AppRuntime:
         self.connections = connections if connections is not None else ConnectionManager()
         self.data = data_service if data_service is not None else DemoDataService()
         self.continuous = ContinuousControl(self.coordinator, device_settings)
-        self.demos = DemoExecutionManager(self.coordinator, self.data, self.connections,
-                                          on_stop=self.continuous.stop)
+        self.demos = DemoExecutionManager(self.coordinator, self.data, self.connections, continuous=self.continuous)
         self.control_tasks = set()
 
     def bind_loop(self):

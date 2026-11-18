@@ -99,6 +99,10 @@ class VehicleCoordinator:
         with self._guard:
             self._slot(identifier).stops += 1
 
+    def stopping(self, identifier):
+        with self._guard:
+            return bool(self._slot(identifier).stops)
+
     def end_stop(self, identifier):
         with self._guard:
             self._slot(identifier).stops -= 1

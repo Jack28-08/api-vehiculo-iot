@@ -6,7 +6,7 @@ servicio. Los permisos se comprueban antes de acceder a la base de datos.
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path, status
+from fastapi import APIRouter, Depends, Header, Path, status
 
 from app.models.vehiculos import (
     INT_MAX,
@@ -47,6 +47,7 @@ WRITE_RESPONSES = {
     422: {"description": "Cuerpo o identificadores inválidos para el contrato de los SP."},
 }
 IdRuta = Annotated[int, Path(ge=1, le=INT_MAX, description="Identificador positivo INT de MySQL.")]
+ControlBarrier = Annotated[str | None, Header(alias="X-IoT-Barrier")]
 
 
 def get_service() -> VehiculoService:
@@ -275,8 +276,11 @@ class VehiculoController:
     def eliminar_movimiento_demo(self, id_vehiculo: IdRuta, id_demo: IdRuta, id_demo_movimiento: IdRuta, service: Service):
         return service.eliminar_movimiento_demo(id_vehiculo, id_demo, id_demo_movimiento)
 
-    def ejecutar_movimiento(self, id_vehiculo: IdRuta, payload: MovimientoEjecutar, service: Service):
-        return service.ejecutar_movimiento(id_vehiculo, payload)
+    def ejecutar_movimiento(self, id_vehiculo: IdRuta, payload: MovimientoEjecutar, service: Service,
+                             barrier: ControlBarrier = None):
+        if barrier is None:
+            return service.ejecutar_movimiento(id_vehiculo, payload)
+        return service.ejecutar_movimiento(id_vehiculo, payload, control_barrier=barrier)
 
 
 controller = VehiculoController()

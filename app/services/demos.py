@@ -13,6 +13,7 @@ from app.models.events import VehicleEvent, state_event
 @dataclass(eq=False)
 class DemoExecution:
     plan: object
+    pulse_ticket: str | None = None
     id_ejecucion: str = field(default_factory=lambda: str(uuid4()))
     cancel_requested: threading.Event = field(default_factory=threading.Event)
     wake: asyncio.Event = field(default_factory=asyncio.Event)
@@ -28,11 +29,11 @@ class DemoExecution:
 
 
 class DemoExecutionManager:
-    def __init__(self, coordinator, data_service, connection_manager, *, on_stop=None):
+    def __init__(self, coordinator, data_service, connection_manager, *, continuous=None):
         self.coordinator = coordinator
         self.data = data_service
         self.connections = connection_manager
-        self._on_stop = on_stop
+        self._continuous = continuous
         self._loop = None
         self._closing = False
         self._lifecycle_lock = threading.RLock()
@@ -54,15 +55,23 @@ class DemoExecutionManager:
                            id_ejecucion=execution.id_ejecucion, id_demo=plan.id_demo,
                            total_movimientos=plan.total_movimientos, **metadata)
 
-    def start(self, id_vehiculo, id_demo):
+    def start(self, id_vehiculo, id_demo, *, barrier=None):
         """Método síncrono: la ruta lo llama en un worker, nunca en el bucle."""
         if self._closing or self._loop is None:
             raise ApplicationError(503, "El ejecutor de DEMO no está disponible.", "demo_unavailable")
+        continuous = self._continuous
+        ticket = continuous.pulse_ticket(id_vehiculo, barrier) if continuous is not None else None
         self.coordinator.ensure_available(id_vehiculo)
         with self.coordinator.lock_for(id_vehiculo):
             self.coordinator.ensure_available(id_vehiculo)
+            if ticket is not None:
+                continuous.pulse_ticket(id_vehiculo, ticket)
             plan = self.data.prepare(id_vehiculo, id_demo)
-            execution = DemoExecution(plan)
+            if ticket is not None:
+                continuous.pulse_ticket(id_vehiculo, ticket)
+                for movement in plan.movimientos:
+                    continuous.validate_pulse_code(movement.get("codigo"))
+            execution = DemoExecution(plan, pulse_ticket=ticket)
             with self._lifecycle_lock:
                 if self._closing:
                     raise ApplicationError(503, "El ejecutor de DEMO está cerrando.", "demo_unavailable")
@@ -82,8 +91,15 @@ class DemoExecutionManager:
                     ready.set_exception(RuntimeError("No se pudo iniciar la tarea DEMO."))
 
             try:
+                if ticket is not None:
+                    continuous.validate_pulse_ticket(id_vehiculo, ticket)
                 self._loop.call_soon_threadsafe(launch)
                 ready.result()
+            except ApplicationError:
+                execution.outcome = "cancelada" if execution.cancel_requested.is_set() else "error"
+                self.coordinator.clear_if_owner(id_vehiculo, execution.id_ejecucion)
+                self._loop.call_soon_threadsafe(execution.ready.set)
+                raise
             except Exception:
                 self.coordinator.clear_if_owner(id_vehiculo, execution.id_ejecucion)
                 raise ApplicationError(503, "No se pudo iniciar la DEMO.", "demo_unavailable") from None
@@ -93,16 +109,35 @@ class DemoExecutionManager:
 
     def _step(self, execution, movement):
         plan = execution.plan
+        ticket = execution.pulse_ticket
         with self.coordinator.lock_for(plan.id_vehiculo):
             if execution.cancel_requested.is_set() or self.coordinator.get_active(plan.id_vehiculo) is not execution:
                 return False
             # Al volver, la transacción ya fue confirmada y cerrada.
-            state = self.data.step(plan.id_vehiculo, plan.id_demo, movement)
+            if ticket is None:
+                state = self.data.step(plan.id_vehiculo, plan.id_demo, movement)
+                dispatched = True
+            else:
+                continuous = self._continuous
+                continuous.validate_pulse_ticket(plan.id_vehiculo, ticket)
+
+                def validate_command(code):
+                    continuous.validate_pulse_ticket(plan.id_vehiculo, ticket)
+                    continuous.validate_pulse_code(code)
+                    if code != movement.get("codigo"):
+                        raise ApplicationError(409, "El catálogo cambió desde que se preparó la DEMO.", "changed_demo_code")
+
+                state = self.data.step(plan.id_vehiculo, plan.id_demo, movement, before_execute=validate_command)
+                dispatched = continuous.dispatch_pulse(plan.id_vehiculo, ticket, state.get("codigo"), movement["duracion_ms"])
             execution.last_state = state
             self._publish(self._event(
                 execution, "demo_movimiento", state, orden=movement["orden"],
                 duracion_ms=movement["duracion_ms"], pausa_ms=movement["pausa_ms"],
             ))
+            if not dispatched:
+                if execution.cancel_requested.is_set() or self.coordinator.stopping(plan.id_vehiculo):
+                    return False
+                raise ApplicationError(503, "El paso no se entregó al dispositivo.", "pulse_unavailable")
             return True
 
     async def _wait(self, execution, milliseconds):
@@ -133,14 +168,18 @@ class DemoExecutionManager:
                 if not await self._worker(execution, self._step, execution, movement):
                     outcome = "cancelada"
                     break
-                if (await self._wait(execution, movement["duracion_ms"])
-                        or await self._wait(execution, movement["pausa_ms"])):
+                if await self._wait(execution, movement["duracion_ms"]):
+                    outcome = "cancelada"
+                    break
+                if execution.pulse_ticket is not None:
+                    self._continuous.end_demo_step(execution.pulse_ticket)
+                if await self._wait(execution, movement["pausa_ms"]):
                     outcome = "cancelada"
                     break
         except asyncio.CancelledError:
             outcome = "cancelada"
         except Exception:
-            outcome = "error"
+            outcome = "cancelada" if execution.cancel_requested.is_set() else "error"
         await asyncio.to_thread(self._finish, execution, outcome)
         return execution.response()
 
@@ -151,10 +190,17 @@ class DemoExecutionManager:
                 return
             if outcome == "finalizada" and execution.cancel_requested.is_set():
                 outcome = "cancelada"
+            if outcome == "finalizada" and execution.pulse_ticket is not None:
+                try:
+                    self._continuous.validate_pulse_ticket(identifier, execution.pulse_ticket)
+                except ApplicationError:
+                    outcome = "cancelada" if self.coordinator.stopping(identifier) else "error"
             execution.outcome = outcome
             kind = {"finalizada": "demo_fin", "cancelada": "demo_cancelada", "error": "demo_error"}[outcome]
             message = "No se pudo completar la DEMO." if outcome == "error" else None
             event = self._event(execution, kind, mensaje=message)
+            if execution.pulse_ticket is not None:
+                self._continuous.cancel_demo_pulses(identifier, execution.pulse_ticket)
             # Al observar el desenlace, el vehículo ya debe estar disponible.
             # Se mantiene el mutex hasta encolar el evento: una ejecución nueva
             # no puede publicar su inicio antes del desenlace de la anterior.
@@ -163,6 +209,8 @@ class DemoExecutionManager:
 
     async def _cancel_execution(self, execution):
         execution.cancel_requested.set()
+        if execution.pulse_ticket is not None:
+            self._continuous.cancel_demo_pulses(execution.plan.id_vehiculo, execution.pulse_ticket)
         execution.wake.set()
         await execution.ready.wait()
         if execution.task is not None:
@@ -172,6 +220,8 @@ class DemoExecutionManager:
     async def cancel(self, id_vehiculo, id_demo=None):
         execution = self.coordinator.get_active(id_vehiculo)
         if execution is None:
+            if self._continuous is not None:
+                self._continuous.cancel_demo_pulses(id_vehiculo, None)
             raise ApplicationError(409, "El vehículo no tiene una DEMO en curso.", "demo_not_running")
         if id_demo is not None and execution.plan.id_demo != id_demo:
             raise ApplicationError(404, "La DEMO indicada no es la ejecución activa del vehículo.", "demo_not_found")
@@ -181,8 +231,8 @@ class DemoExecutionManager:
         # Se marca antes de esperar RDS; no bloquea el bucle y da prioridad al stop.
         self.coordinator.begin_stop(id_vehiculo)
         try:
-            if self._on_stop is not None:
-                self._on_stop(id_vehiculo)
+            if self._continuous is not None:
+                self._continuous.stop(id_vehiculo)
             execution = self.coordinator.get_active(id_vehiculo)
             if execution is not None:
                 await self._cancel_execution(execution)

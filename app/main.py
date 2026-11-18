@@ -48,7 +48,7 @@ app.add_middleware(
     ],
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["X-API-Key", "Content-Type", "Accept", "Authorization"],
+    allow_headers=["X-API-Key", "Content-Type", "Accept", "Authorization", "X-IoT-Barrier"],
 )
 
 app.include_router(health_router)

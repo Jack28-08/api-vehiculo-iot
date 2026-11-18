@@ -63,7 +63,7 @@ class DemoDataService(VehiculoService):
                 raise ApplicationError(409, "El orden de la DEMO no es válido.", "invalid_demo")
             return DemoPlan(id_vehiculo, id_demo, tuple(dict(r) for r in rows))
 
-    def step(self, id_vehiculo, id_demo, movement):
+    def step(self, id_vehiculo, id_demo, movement, *, before_execute=None):
         self._valid_movement(movement)
         with self.manager.transaction() as connection:
             vehicle = Vehiculo.desde_fila(self._vehiculo(connection, id_vehiculo, lock=True))
@@ -74,6 +74,8 @@ class DemoDataService(VehiculoService):
             command = Comando.desde_fila(
                 self._comando(connection, id_vehiculo, movement["id_comando"], lock=True),
             )
+            if before_execute is not None:
+                before_execute(command.codigo)
             operation = MovimientoDeDemo(vehicle, command)
             confirmed = operation.ejecutar(self.repository, connection)
             result = EstadoRespuesta.model_validate(confirmed.estado).model_dump()

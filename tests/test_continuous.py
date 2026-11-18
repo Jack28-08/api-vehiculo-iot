@@ -14,12 +14,16 @@ from uuid import uuid4
 from app.errors import ApplicationError
 from app.main import app
 from app.models.continuous import ControlVector, Gesture
+from app.models.vehiculos import MovimientoConfirmado
+from app.routes.vehiculos import get_service
 from app.runtime import AppRuntime, CoordinatedVehiculoService
 from app.security import ApiKeySettings, get_api_key_settings
 from app.services.continuous import ContinuousControl, DeviceSettings, TTL_MS
 from app.services.coordination import VehicleCoordinator
+from app.services.demo_data import DemoPlan
 from tests.test_api_security import main_request
 from tests.test_cors import cors_request
+from tests.test_http import MOVIMIENTO
 from tests.test_realtime import until
 
 
@@ -147,6 +151,26 @@ class BrokerTests(unittest.TestCase):
         self.assertNotIn(DEVICE_TOKEN, repr(isolated))
         self.assertNotIn(DEVICE_TOKEN, isolated.model_dump_json())
 
+    def test_pulse_keeps_its_id_across_heartbeats_and_expires_without_replay(self):
+        ticket = self.broker.pulse_ticket(1, str(self.vector.barrera))
+        self.assertTrue(self.broker.dispatch_pulse(1, ticket, 3))
+        first = self.broker.heartbeat(self.device, 2)
+        self.assertEqual((first.codigo, first.pulso, first.vigencia_ms), (3, 1, 250))
+        self.now += .1
+        continued = self.broker.heartbeat(self.device, 3)
+        self.assertEqual((continued.codigo, continued.pulso), (3, 1))
+        self.assertLess(continued.vigencia_ms, first.vigencia_ms)
+        self.now += .16
+        expired = self.broker.heartbeat(self.device, 4)
+        self.assertEqual((expired.codigo, expired.pulso), (0, 0))
+        self.assertTrue(self.broker.dispatch_pulse(1, ticket, 4, 1000))
+        next_pulse = self.broker.heartbeat(self.device, 5)
+        self.assertEqual((next_pulse.codigo, next_pulse.pulso, next_pulse.vigencia_ms), (4, 2, 750))
+        replacement = self.broker.connect()
+        self.assertFalse(self.broker.dispatch_pulse(1, ticket, 3))
+        snapshot = self.broker.heartbeat(replacement, 1)
+        self.assertEqual((snapshot.codigo, snapshot.pulso), (0, 0))
+
 
 class StopPriorityTests(unittest.IsolatedAsyncioTestCase):
     async def test_fence_precedes_blocked_snapshot(self):
@@ -194,16 +218,59 @@ class ContinuousRouteTests(unittest.IsolatedAsyncioTestCase):
         self.data = Mock()
         self.data.snapshot.return_value = None
         self.runtime = AppRuntime(self.data, device_settings=device_settings())
+        self.base = Mock()
+        self.base.ejecutar_movimiento.side_effect = self.commit_movement
         self.runtime.bind_loop()
         self.addAsyncCleanup(self.runtime.shutdown)
         stack = self.enterContext(ExitStack())
         stack.enter_context(patch("app.routes.continuous.runtime", self.runtime))
         stack.enter_context(patch("app.routes.websocket.runtime", self.runtime))
+        stack.enter_context(patch("app.routes.demos.runtime", self.runtime))
         stack.enter_context(patch.dict(app.dependency_overrides, {
+            get_service: lambda: CoordinatedVehiculoService(self.runtime, self.base),
             get_api_key_settings: lambda: ApiKeySettings(
                 _env_file=None, api_key_operator=OPERATOR, api_key_admin="fixture-local-admin",
             ),
         }))
+
+    @staticmethod
+    def commit_movement(id_vehiculo, payload, *, before_execute):
+        # El identificador de catálogo no coincide con el código cableado.
+        before_execute(4)
+        return MovimientoConfirmado.model_validate({**MOVIMIENTO, "estado": {**MOVIMIENTO["estado"], "codigo": 4}})
+
+    async def managed(self, path, barrier, payload=None):
+        headers = {"X-API-Key": OPERATOR}
+        if barrier is not None:
+            headers["X-IoT-Barrier"] = barrier
+        return await cors_request("POST", path, headers=headers, payload=payload)
+
+    def demo(self, *commands):
+        plan = DemoPlan(1, 3, tuple(
+            {"orden": index, "id_comando": index, "codigo": code, "duracion_ms": duration, "pausa_ms": pause}
+            for index, (code, duration, pause) in enumerate(commands, 1)
+        ))
+        self.data.prepare.return_value = plan
+
+        def step(_vehicle, _demo, movement, *, before_execute):
+            before_execute(movement["codigo"])
+            return {"id_comando": movement["id_comando"], "codigo": movement["codigo"]}
+
+        self.data.step.side_effect = step
+        return plan
+
+    def demo_waits(self):
+        waits = asyncio.Queue()
+
+        async def wait(execution, milliseconds):
+            if milliseconds:
+                release = asyncio.Event()
+                await waits.put((milliseconds, release))
+                await asyncio.wait_for(release.wait(), 1)
+            return execution.cancel_requested.is_set()
+
+        self.enterContext(patch.object(self.runtime.demos, "_wait", side_effect=wait))
+        return waits
 
     async def socket(self, path=DEVICE, headers=None):
         incoming, sent = asyncio.Queue(), []
@@ -313,6 +380,174 @@ class ContinuousRouteTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((closed["type"], closed["code"]), ("websocket.close", 1008))
             _, capability, _ = await main_request("GET", CONTROL + "/capacidad")
             self.assertFalse(capability["disponible"])
+
+    async def test_individual_requires_current_header_and_dispatches_committed_catalog_code(self):
+        socket = await self.socket()
+        await self.send_heartbeat(socket, 1)
+        capability = (await main_request("GET", CONTROL + "/capacidad"))[1]
+        barrier = capability["barrera"]
+        self.assertFalse(capability["demo_remota"])
+        path = "/vehiculos/1/movimientos"
+        body = {"id_comando": 2, "origen": "HTTP"}
+        for supplied in (None, str(uuid4())):
+            self.assertEqual((await self.managed(path, supplied, body))[0], 409)
+        self.base.ejecutar_movimiento.assert_not_called()
+
+        self.base.ejecutar_movimiento.side_effect = lambda *_args, before_execute: before_execute(6)
+        self.assertEqual((await self.managed(path, barrier, body))[0], 409)
+        first = await self.send_heartbeat(socket, 2)
+        self.assertEqual((first["codigo"], first["pulso"]), (0, 0))
+        self.base.ejecutar_movimiento.side_effect = self.commit_movement
+        code, _, raw = await self.managed(path, barrier, body)
+        self.assertEqual(code, 200)
+        self.assertEqual(json.loads(raw)["historial"]["id_historial"], MOVIMIENTO["historial"]["id_historial"])
+        frame = await self.send_heartbeat(socket, 3)
+        self.assertEqual((frame["codigo"], frame["pulso"], frame["longitudinal"], frame["lateral"]), (4, 1, 0, 0))
+        self.assertLessEqual(frame["vigencia_ms"], 750)
+
+    async def test_stop_fences_pulse_while_individual_commit_is_in_flight(self):
+        socket = await self.socket()
+        await self.send_heartbeat(socket, 1)
+        barrier = (await main_request("GET", CONTROL + "/capacidad"))[1]["barrera"]
+        entered, release = Event(), Event()
+
+        def blocked(*args, before_execute):
+            before_execute(4)
+            entered.set()
+            if not release.wait(1):
+                raise RuntimeError("commit del doble bloqueado")
+            return self.commit_movement(*args, before_execute=lambda _: None)
+
+        self.base.ejecutar_movimiento.side_effect = blocked
+        movement = asyncio.create_task(self.managed("/vehiculos/1/movimientos", barrier,
+                                                   {"id_comando": 2, "origen": "HTTP"}))
+        stop = None
+        try:
+            self.assertTrue(await asyncio.to_thread(entered.wait, .5))
+            stop = asyncio.create_task(main_request("POST", "/vehiculos/1/detener", api_key=OPERATOR))
+            await until(lambda: self.runtime.coordinator.stopping(1))
+            self.assertFalse(stop.done())
+            frame = await self.send_heartbeat(socket, 2)
+            self.assertEqual((frame["codigo"], frame["pulso"]), (0, 0))
+            self.assertEqual((await self.managed("/vehiculos/1/movimientos", barrier,
+                                                {"id_comando": 2, "origen": "HTTP"}))[0], 409)
+        finally:
+            release.set()
+            self.assertEqual((await asyncio.wait_for(movement, 1))[0], 200)
+            if stop:
+                self.assertEqual((await asyncio.wait_for(stop, 1))[0], 200)
+        self.assertEqual((await self.send_heartbeat(socket, 3))["codigo"], 0)
+        self.base.ejecutar_movimiento.assert_called_once()
+
+    async def test_demo_uses_rds_durations_and_neutral_pause_with_strictly_increasing_pulses(self):
+        self.demo((4, 1000, 150), (7, 650, 0))
+        waits = self.demo_waits()
+        socket = await self.socket()
+        await self.send_heartbeat(socket, 1)
+        barrier = (await main_request("GET", CONTROL + "/capacidad"))[1]["barrera"]
+        path = "/vehiculos/1/demos/3/iniciar"
+        self.assertEqual((await self.managed(path, None))[0], 409)
+        self.data.prepare.assert_not_called()
+        self.assertEqual((await self.managed(path, barrier))[0], 202)
+        duration, first = await asyncio.wait_for(waits.get(), .5)
+        self.assertEqual(duration, 1000)
+        frame = await self.send_heartbeat(socket, 2)
+        self.assertEqual((frame["codigo"], frame["pulso"], frame["vigencia_ms"]), (4, 1, 750))
+        first.set()
+        duration, pause = await asyncio.wait_for(waits.get(), .5)
+        self.assertEqual(duration, 150)
+        frame = await self.send_heartbeat(socket, 3)
+        self.assertEqual((frame["codigo"], frame["pulso"], frame["vigencia_ms"]), (0, 0, 0))
+        pause.set()
+        duration, second = await asyncio.wait_for(waits.get(), .5)
+        self.assertEqual(duration, 650)
+        frame = await self.send_heartbeat(socket, 4)
+        self.assertEqual((frame["codigo"], frame["pulso"]), (7, 2))
+        self.assertLessEqual(frame["vigencia_ms"], 650)
+        second.set()
+        await until(lambda: self.runtime.coordinator.get_active(1) is None)
+        self.assertNotEqual((await main_request("GET", CONTROL + "/capacidad"))[1]["barrera"], barrier)
+        self.assertEqual((await self.send_heartbeat(socket, 5))["codigo"], 0)
+        self.assertEqual(self.data.step.call_count, 2)
+        self.base.ejecutar_movimiento.assert_not_called()
+
+    async def test_cancel_cancels_acquisition_still_loading_its_plan(self):
+        plan = self.demo((4, 700, 0))
+        socket = await self.socket()
+        await self.send_heartbeat(socket, 1)
+        barrier = (await main_request("GET", CONTROL + "/capacidad"))[1]["barrera"]
+        entered, release = Event(), Event()
+
+        def prepare(*_args):
+            entered.set()
+            if not release.wait(1):
+                raise RuntimeError("consulta del doble bloqueada")
+            return plan
+
+        self.data.prepare.side_effect = prepare
+        starting = asyncio.create_task(self.managed("/vehiculos/1/demos/3/iniciar", barrier))
+        try:
+            self.assertTrue(await asyncio.to_thread(entered.wait, .5))
+            code, _, _ = await main_request("POST", "/vehiculos/1/demos/3/cancelar", api_key=OPERATOR)
+            self.assertEqual(code, 409)  # No ejecución todavía. Se cercó igualmente un inicio atrasado.
+        finally:
+            release.set()
+            self.assertEqual((await asyncio.wait_for(starting, 1))[0], 409)
+        self.data.step.assert_not_called()
+        self.assertEqual((await self.send_heartbeat(socket, 2))["codigo"], 0)
+
+    async def test_cancel_does_not_wait_forever_for_reserved_demo_rejected_at_dispatch(self):
+        self.demo((4, 700, 0))
+        socket = await self.socket()
+        await self.send_heartbeat(socket, 1)
+        barrier = (await main_request("GET", CONTROL + "/capacidad"))[1]["barrera"]
+        entered, release = Event(), Event()
+        validate = self.runtime.continuous.validate_pulse_ticket
+
+        def validate_at_dispatch(*args):
+            if self.runtime.coordinator.get_active(1) is not None:
+                entered.set()
+                if not release.wait(1):
+                    raise RuntimeError("despacho del doble bloqueado")
+            return validate(*args)
+
+        self.enterContext(patch.object(self.runtime.continuous, "validate_pulse_ticket", side_effect=validate_at_dispatch))
+        starting = asyncio.create_task(self.managed("/vehiculos/1/demos/3/iniciar", barrier))
+        cancelled = None
+        try:
+            self.assertTrue(await asyncio.to_thread(entered.wait, .5))
+            execution = self.runtime.coordinator.get_active(1)
+            cancelled = asyncio.create_task(main_request("POST", "/vehiculos/1/demos/3/cancelar", api_key=OPERATOR))
+            await until(execution.cancel_requested.is_set)
+        finally:
+            release.set()
+            self.assertEqual((await asyncio.wait_for(starting, 1))[0], 409)
+            if cancelled:
+                status, payload, _ = await asyncio.wait_for(cancelled, 1)
+                self.assertEqual((status, payload["estado"]), (200, "cancelada"))
+        self.data.step.assert_not_called()
+
+    async def test_reconnect_during_demo_pause_cannot_rearm_or_confirm_finish(self):
+        self.demo((1, 700, 150), (8, 700, 0))
+        waits = self.demo_waits()
+        socket = await self.socket()
+        await self.send_heartbeat(socket, 1)
+        _, monitor = await self.socket("/ws/vehiculos/1", [])
+        barrier = (await main_request("GET", CONTROL + "/capacidad"))[1]["barrera"]
+        self.assertEqual((await self.managed("/vehiculos/1/demos/3/iniciar", barrier))[0], 202)
+        _, first = await asyncio.wait_for(waits.get(), .5)
+        self.assertEqual((await self.send_heartbeat(socket, 2))["codigo"], 1)
+        first.set()
+        _, pause = await asyncio.wait_for(waits.get(), .5)
+        restored = await self.socket()
+        self.assertEqual((await self.send_heartbeat(restored, 1))["codigo"], 0)
+        pause.set()
+        await until(lambda: self.runtime.coordinator.get_active(1) is None)
+        self.data.step.assert_called_once()
+        messages = lambda: [json.loads(m["text"])["tipo"] for m in monitor if m["type"] == "websocket.send"]
+        await until(lambda: "demo_error" in messages())
+        self.assertNotIn("demo_fin", messages())
+        self.assertEqual((await self.send_heartbeat(restored, 2))["codigo"], 0)
 
 
 if __name__ == "__main__":
