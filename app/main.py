@@ -31,8 +31,9 @@ app = FastAPI(
     title="API Vehículo IoT",
     description=(
         "Práctica 2.5: HTTP con POO y los 21 SP del contrato real de RDS. "
-        "GET y WebSocket de monitoreo públicos; POST con X-API-Key. Operador: movimientos y DEMO; "
-        "administrador: gestión y movimientos. Las actualizaciones y eliminaciones "
+        "GET y WebSocket de monitoreo públicos. El operador usa X-API-Key para movimientos y DEMO. "
+        "El acceso directo opcional admite sesiones limitadas al mando del vehículo 1. "
+        "La gestión requiere clave de administrador. Las actualizaciones y eliminaciones "
         "usan POST por requisito de la práctica. DEMO y DETENER son operaciones lógicas; "
         "ningún evento confirma actuación física del microcontrolador."
     ),

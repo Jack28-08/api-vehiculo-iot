@@ -31,6 +31,7 @@ class ResultadoMovimiento:
     conectado: bool
     estado: dict
     historial: dict | None
+    id_historial: int | None
 
 
 class Movimiento(ABC):
@@ -49,7 +50,7 @@ class Movimiento(ABC):
         return self._comando
 
     def ejecutar(self, repository: RepositorioMovimientos,
-                 connection: Any) -> ResultadoMovimiento:
+                 connection: Any, *, consultar_historial: bool = True) -> ResultadoMovimiento:
         self.vehiculo.exigir_activo()
         self.comando.exigir_pertenencia(self.vehiculo)
         self.comando.exigir_activo()
@@ -60,12 +61,12 @@ class Movimiento(ABC):
         history_id = self._registrar_historial(repository, connection)
         state = repository.obtener_estado(connection, self.vehiculo.id_vehiculo)
         history = None
-        if history_id is not None:
+        if history_id is not None and consultar_historial:
             rows = repository.obtener_historial(connection, self.vehiculo.id_vehiculo)
             history = next((row for row in rows if row["id_historial"] == history_id), None)
-        if state is None or (history_id is not None and history is None):
+        if state is None or (history_id is not None and consultar_historial and history is None):
             raise ApplicationError(500, "No se pudo confirmar el movimiento.", "result_missing")
-        return ResultadoMovimiento(connected, state, history)
+        return ResultadoMovimiento(connected, state, history, history_id)
 
     @abstractmethod
     def _registrar_historial(self, repository: RepositorioMovimientos,

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Response, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
 
 from app.models.continuous import Capability, ControlGrant, ControlVector, DeviceHeartbeat, Gesture, ReleaseResult
+from app.models.events import state_event
 from app.routes.vehiculos import IdRuta
 from app.runtime import runtime
 from app.security import require_operator
@@ -15,7 +16,7 @@ from app.services.continuous import DEVICE_TIMEOUT
 
 router = APIRouter(tags=["Control continuo"])
 operator = [Depends(require_operator)]
-MAX_HEARTBEAT_BYTES = 128
+MAX_HEARTBEAT_BYTES = 192
 SEND_TIMEOUT_SECONDS = .25
 
 
@@ -70,6 +71,10 @@ async def device(websocket: WebSocket, id_vehiculo: IdRuta):
             snapshot = broker.heartbeat(connection, heartbeat.reto)
             # El dispositivo solicita una consigna por latido. No hay cola de órdenes para reintentar.
             await asyncio.wait_for(websocket.send_json(snapshot.model_dump(mode="json")), SEND_TIMEOUT_SECONDS)
+            if heartbeat.acuse is not None:
+                report = broker.report(connection, heartbeat.acuse)
+                if report is not None:
+                    runtime.connections.publish_threadsafe(state_event("salida_dispositivo", id_vehiculo, None, **report))
     except (ValidationError, ValueError):
         close_code = 1008
     except TimeoutError:

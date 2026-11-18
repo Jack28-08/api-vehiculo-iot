@@ -36,11 +36,25 @@ class Capability(BaseModel):
 class ControlGrant(Gesture):
     secuencia: Sequence
     ttl_ms: int
+    id_operacion: UUID | None = None
+    id_historial: int | None = None
+    ms_persistencia: int | None = None
+    tiempos_ms: dict[str, int] | None = None
 
 
 class ReleaseResult(BaseModel):
     liberado: Literal[True] = True
     barrera: UUID
+    id_operacion: UUID | None = None
+
+
+class OutputAck(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    secuencia: Sequence
+    estado: Literal["aplicado", "liberado"]
+    mascara: Annotated[int, Field(strict=True, ge=0, le=255)]
+    simulado: Annotated[bool, Field(strict=True)]
 
 
 class DeviceHeartbeat(BaseModel):
@@ -48,6 +62,7 @@ class DeviceHeartbeat(BaseModel):
 
     tipo: Literal["latido"]
     reto: Annotated[int, Field(strict=True, ge=1, le=2**32 - 1)]
+    acuse: OutputAck | None = None
 
 
 class DeviceSnapshot(BaseModel):

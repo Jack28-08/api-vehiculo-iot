@@ -219,14 +219,28 @@ class VehiculoService:
             )
             if before_execute is not None:
                 before_execute(command.codigo)
-            movement = MovimientoIndividual(vehicle, command, data.origen)
-            confirmed = movement.ejecutar(self.repository, connection)
-            result = MovimientoConfirmado(
-                id_vehiculo=id_vehiculo, id_comando=data.id_comando, origen=data.origen,
-                conectado=confirmed.conectado,
-                estado=EstadoRespuesta.model_validate(confirmed.estado),
-                historial=HistorialRespuesta.model_validate(confirmed.historial),
+            return self._confirmar_movimiento(connection, vehicle, command, data.origen)
+
+    def ejecutar_transicion(self, id_vehiculo, codigo, nombres, before_execute):
+        with self.manager.transaction() as connection:
+            vehicle = Vehiculo.desde_fila(self._vehiculo(connection, id_vehiculo, lock=True))
+            vehicle.exigir_activo()
+            rows = self.repository.obtener_comandos(connection, id_vehiculo)
+            candidates = [row for row in rows if row["codigo"] == codigo]
+            if len(candidates) != 1 or candidates[0]["nombre"] not in nombres:
+                raise ApplicationError(409, "La dirección no coincide con el catálogo del vehículo.", "direction_catalog")
+            command = Comando.desde_fila(candidates[0])
+            before_execute()
+            confirmed = MovimientoIndividual(vehicle, command, "CONTROL-WEB").ejecutar(
+                self.repository, connection, consultar_historial=False,
             )
-        # CoordinatedVehiculoService publica este resultado DESPUÉS del commit,
-        # sin deshacer ni repetir una transacción si un monitor se desconecta.
-        return result
+            return EstadoRespuesta.model_validate(confirmed.estado), confirmed.id_historial
+
+    def _confirmar_movimiento(self, connection, vehicle, command, origen):
+        confirmed = MovimientoIndividual(vehicle, command, origen).ejecutar(self.repository, connection)
+        return MovimientoConfirmado(
+            id_vehiculo=vehicle.id_vehiculo, id_comando=command.id_comando, origen=origen,
+            conectado=confirmed.conectado,
+            estado=EstadoRespuesta.model_validate(confirmed.estado),
+            historial=HistorialRespuesta.model_validate(confirmed.historial),
+        )

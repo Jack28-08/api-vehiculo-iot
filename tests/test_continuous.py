@@ -13,7 +13,7 @@ from uuid import uuid4
 
 from app.errors import ApplicationError
 from app.main import app
-from app.models.continuous import ControlVector, Gesture
+from app.models.continuous import ControlVector, Gesture, OutputAck
 from app.models.vehiculos import MovimientoConfirmado
 from app.routes.vehiculos import get_service
 from app.runtime import AppRuntime, CoordinatedVehiculoService
@@ -170,6 +170,89 @@ class BrokerTests(unittest.TestCase):
         self.assertFalse(self.broker.dispatch_pulse(1, ticket, 3))
         snapshot = self.broker.heartbeat(replacement, 1)
         self.assertEqual((snapshot.codigo, snapshot.pulso), (0, 0))
+
+    def test_only_direction_changes_record_real_catalog_codes_and_renew_without_rds(self):
+        recorder = Mock(return_value=(881, {"conexion_rds": 5}))
+        self.broker = ContinuousControl(self.coordinator,
+                                       device_settings(diagonals=True).model_copy(update={"persist_transitions": True}),
+                                       lambda: self.now, record_transition=recorder)
+        device = self.broker.connect()
+        self.broker.heartbeat(device, 1)
+        vector = self.vector.model_copy(update={"barrera": self.broker.capability(1).barrera})
+        self.broker.acquire(1, vector)
+        assert_neutral(self, self.broker.heartbeat(device, 2))
+        grant = self.broker.update(1, vector.model_copy(update={"secuencia": 2}))
+        self.assertEqual(recorder.call_args.args[1:4], (9, {"AVANZAR_IZQUIERDA"}, grant.id_operacion))
+        self.assertEqual(grant.id_historial, 881)
+        self.assertEqual(grant.tiempos_ms, {"conexion_rds": 5})
+        self.now += .2
+        renewal = self.broker.update(1, vector.model_copy(update={"secuencia": 3}))
+        self.assertEqual((renewal.id_operacion, renewal.id_historial), (grant.id_operacion, 881))
+        self.assertEqual(recorder.call_count, 1)
+        self.broker.update(1, vector.model_copy(update={"secuencia": 4, "longitudinal": -1}))
+        self.assertEqual(recorder.call_args.args[1], 11)
+        self.assertEqual(recorder.call_count, 2)
+
+    def test_stop_during_commit_discards_transition_without_holding_the_device_lock(self):
+        device = None
+        def record_while_stopped(*args):
+            args[-1]()  # La transacción superó la última validación antes de confirmar.
+            self.broker.stop(1)
+            assert_neutral(self, self.broker.heartbeat(device, 2))
+            return 882, {}
+        self.broker = ContinuousControl(self.coordinator,
+                                       device_settings(diagonals=True).model_copy(update={"persist_transitions": True}),
+                                       lambda: self.now, record_transition=record_while_stopped)
+        device = self.broker.connect()
+        self.broker.heartbeat(device, 1)
+        vector = self.vector.model_copy(update={"barrera": self.broker.capability(1).barrera})
+        self.broker.acquire(1, vector)
+        with self.assertRaises(ApplicationError):
+            self.broker.update(1, vector.model_copy(update={"secuencia": 2}))
+        assert_neutral(self, self.broker.heartbeat(device, 3))
+
+    def test_ack_uses_mask_operation_and_generation_and_is_not_a_second_command(self):
+        self.broker.acquire(1, self.vector)
+        grant = self.broker.update(1, self.vector.model_copy(update={"secuencia": 2}))
+        sent = self.broker.heartbeat(self.device, 2)
+        self.now += .15
+        self.broker.heartbeat(self.device, 3)
+        applied = OutputAck(secuencia=sent.secuencia, estado="aplicado", mascara=0x03, simulado=True)
+        self.assertIsNone(self.broker.report(self.device, applied.model_copy(update={"mascara": 0x82})))
+        report = self.broker.report(self.device, applied)
+        self.assertEqual((report["id_operacion"], report["simulado"], report["ms_ida_vuelta"]),
+                         (grant.id_operacion, True, 150))
+        self.assertIsNone(self.broker.report(self.device, applied))
+        stop_id = self.broker.stop(1)
+        neutral = self.broker.heartbeat(self.device, 4)
+        self.broker.heartbeat(self.device, 5)
+        released = OutputAck(secuencia=neutral.secuencia, estado="liberado", mascara=0, simulado=True)
+        self.assertEqual(self.broker.report(self.device, released)["id_operacion"], stop_id)
+        self.assertIsNone(self.broker.report(self.device, applied))
+        self.broker.connect()
+        self.assertIsNone(self.broker.report(self.device, released))
+
+    def test_named_diagonal_pulse_requires_matching_catalog(self):
+        ticket = self.broker.pulse_ticket(1, str(self.vector.barrera))
+        self.assertFalse(self.broker.dispatch_pulse(1, ticket, 9, name="OTRO"))
+        self.assertTrue(self.broker.dispatch_pulse(1, ticket, 9, name="AVANZAR_IZQUIERDA"))
+        snapshot = self.broker.heartbeat(self.device, 2)
+        self.assertEqual((snapshot.codigo, snapshot.pulso), (9, 1))
+
+    def test_repeat_request_cannot_create_a_second_pulse_in_the_same_barrier(self):
+        ticket = self.broker.pulse_ticket(1, str(self.vector.barrera))
+        request = uuid4()
+        self.broker.claim_pulse_request(1, ticket, request)
+        self.assertTrue(self.broker.dispatch_pulse(1, ticket, 3, operation=request))
+        self.now += .3
+        assert_neutral(self, self.broker.heartbeat(self.device, 2))
+        with self.assertRaises(ApplicationError) as duplicate:
+            self.broker.claim_pulse_request(1, ticket, request)
+        self.assertEqual(duplicate.exception.code, "duplicate_request")
+        self.broker.stop(1)
+        with self.assertRaises(ApplicationError) as stale:
+            self.broker.claim_pulse_request(1, ticket, request)
+        self.assertEqual(stale.exception.code, "stale_barrier")
 
 
 class StopPriorityTests(unittest.IsolatedAsyncioTestCase):

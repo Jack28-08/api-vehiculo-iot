@@ -2,13 +2,17 @@
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from contextvars import ContextVar
 import socket
+from time import perf_counter
 from typing import Any
 
 import mysql.connector
 from mysql.connector import errors
 
 from app.config.settings import Settings, get_settings
+
+transition_timing = ContextVar("transition_timing", default=None)
 
 
 _MESSAGES = {
@@ -125,10 +129,14 @@ class MySQLConnectionManager:
         """Abre y cierra una conexión nueva, incluso si la operación falla."""
 
         options = self._connection_options()
+        timing = transition_timing.get()
+        started = perf_counter() if timing is not None else 0
         try:
             connection = mysql.connector.connect(**options)
         except Exception as error:
             raise _safe_error(error) from None
+        if timing is not None:
+            timing["conexion_rds"] = round((perf_counter() - started) * 1000)
         completed = False
         try:
             yield connection
@@ -174,10 +182,14 @@ class MySQLConnectionManager:
         """
 
         with self.connection() as connection:
+            timing = transition_timing.get()
+            started = perf_counter() if timing is not None else 0
             try:
                 connection.start_transaction(readonly=readonly)
                 yield connection
                 connection.commit()
+                if timing is not None:
+                    timing["transaccion_rds"] = round((perf_counter() - started) * 1000)
             except BaseException as error:
                 try:
                     connection.rollback()

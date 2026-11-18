@@ -221,6 +221,16 @@ def harness(data=None, *, fail_history=False):
 
 
 class MovementTransactionTests(unittest.TestCase):
+    def test_joystick_transition_uses_catalog_id_and_does_not_read_history_rows(self):
+        data = initial_data()
+        data["commands"][11].update(codigo=2, nombre="AVANZAR")
+        with harness(data) as (service, repository, connection, durable):
+            state, history_id = service.ejecutar_transicion(1, 2, {"AVANZAR"}, lambda: None)
+            self.assertEqual((state.id_comando, state.codigo, history_id), (11, 2, 100))
+            self.assertEqual(repository.history_rows_read, [])
+            self.assertEqual(len(durable["history"]), 2)
+            self.assertEqual(connection.commits, 1)
+
     def test_second_procedure_failure_rolls_back_both_changes_on_same_connection(self):
         before = initial_data()
         before["commands"][12] = dict(before["commands"][11]) | {

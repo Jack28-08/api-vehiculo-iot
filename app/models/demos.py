@@ -1,6 +1,7 @@
 """Respuestas de control lógico de ejecuciones, sin confirmación del hardware."""
 
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -17,4 +18,5 @@ class LogicalStopResponse(BaseModel):
     id_vehiculo: int
     id_ejecucion: str | None
     detencion_logica: Literal[True]
+    id_operacion: UUID | None = None
     estado: Literal["detenida_logicamente"]

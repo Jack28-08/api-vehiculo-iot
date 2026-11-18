@@ -2,12 +2,13 @@
 
 from datetime import datetime, timezone
 from typing import Literal
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator
 
 EventType = Literal[
     "estado_inicial", "movimiento_individual", "demo_inicio", "demo_movimiento",
-    "demo_fin", "demo_cancelada", "demo_error", "detencion_logica",
+    "demo_fin", "demo_cancelada", "demo_error", "detencion_logica", "salida_dispositivo",
 ]
 
 
@@ -26,6 +27,13 @@ class VehicleEvent(BaseModel):
     duracion_ms: int | None = None
     pausa_ms: int | None = None
     mensaje: str | None = None
+    id_evento: UUID = Field(default_factory=uuid4)
+    id_operacion: UUID | None = None
+    id_historial: int | None = None
+    estado_salida: Literal["aplicado", "liberado"] | None = None
+    mascara: int | None = None
+    simulado: bool | None = None
+    ms_ida_vuelta: int | None = None
 
     @field_validator("fecha_hora")
     @classmethod

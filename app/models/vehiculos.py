@@ -7,6 +7,7 @@ los campos opcionales omitidos se escriben como NULL.
 
 from datetime import datetime
 from typing import Annotated
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StringConstraints
 
@@ -147,6 +148,7 @@ class MovimientoEjecutar(Entrada):
 
     id_comando: Identificador
     origen: Origen
+    id_solicitud: UUID | None = None
 
 
 class MovimientoConfirmado(BaseModel):
@@ -158,6 +160,7 @@ class MovimientoConfirmado(BaseModel):
     conectado: bool
     estado: EstadoRespuesta
     historial: HistorialRespuesta
+    id_operacion: str | None = None
 
 
 class EliminacionRespuesta(BaseModel):

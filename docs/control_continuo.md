@@ -4,7 +4,7 @@ El vehículo 1 puede recibir una consigna efímera de dos ejes por un canal de e
 
 ## Contrato HTTP
 
-Las rutas se encuentran bajo `/vehiculos/1/control`. El navegador consulta la capacidad por GET. Los POST requieren `X-API-Key` con el rol de operador o administrador. El token del dispositivo nunca se entrega al navegador. La ventana de evaluación conserva el alcance anterior para movimientos, inicio y cancelación de DEMO y DETENER.
+Las rutas se encuentran bajo `/vehiculos/1/control`. El navegador consulta la capacidad por GET. Los POST admiten el Bearer de [acceso directo](acceso_directo.md) o una `X-API-Key` de operador o administrador. El equipo usa su propia credencial. La ventana de evaluación conserva su alcance previo para movimientos, inicio y cancelación de DEMO y DETENER.
 
 | Ruta | Cuerpo de solicitud | Resultado |
 | --- | --- | --- |
@@ -27,7 +27,16 @@ El equipo envía `{"tipo":"latido","reto":1}` con un reto entero positivo de 32 
 {"tipo":"control","reto":1,"secuencia":1,"vigencia_ms":0,"longitudinal":0,"lateral":0,"codigo":0,"pulso":0}
 ```
 
-La secuencia de respuesta aumenta durante el socket y es independiente de las secuencias HTTP. Un permiso activo envía ejes, tiempo restante y `codigo` y `pulso` iguales a cero. Un pulso envía ejes cero, el código de catálogo entre 1 y 8 y un `pulso` positivo creciente en el socket. Los latidos del mismo pulso conservan ese identificador. La vigencia máxima es 750 ms y el servidor nunca la calcula más allá del fin programado del pulso. En neutral los ejes, `codigo`, `pulso` y `vigencia_ms` son cero.
+La secuencia de respuesta aumenta durante el socket y es independiente de las secuencias HTTP. Un permiso activo envía ejes, tiempo restante y `codigo` y `pulso` iguales a cero. Un pulso envía ejes cero, un código verificado del catálogo y un `pulso` positivo creciente en el socket. Los latidos del mismo pulso conservan ese identificador. La vigencia máxima es 750 ms y el servidor nunca la calcula más allá del fin programado del pulso. En neutral los ejes, `codigo`, `pulso` y `vigencia_ms` son cero.
+
+El equipo puede incluir `acuse` en el siguiente latido. Contiene la
+`secuencia` de la consigna observada, `estado` con valor `aplicado` o
+`liberado`, `mascara` y `simulado`. La API limita la correlación a
+consignas recientes del mismo socket. Publica el resultado como
+`salida_dispositivo` con `id_evento`, `id_operacion`, `estado_salida`,
+`mascara`, `simulado` y `ms_ida_vuelta`. El tiempo incluye la espera del
+siguiente latido. La máscara reporta la solicitud digital del ESP8266.
+La comprobación mecánica permanece a cargo del ensayo supervisado.
 
 Una conexión nueva invalida permiso y pulso y espera un latido antes de informar `disponible`. Un latido inválido, obsoleto o ausente cierra el canal. El firmware valida reto, secuencia, antigüedad y pulso, neutraliza al vencer el plazo o perder conexión y evita reactivar un pulso terminado aunque llegue en una respuesta nueva. `disponible` acredita un latido autenticado reciente. Si el equipo no recibe un pulso breve antes de vencer, no lo ejecuta en una reconexión. La actuación física exige verificación aparte.
 
@@ -40,6 +49,17 @@ Cuando el canal está habilitado, `/vehiculos/1/movimientos` y `/vehiculos/1/dem
 El movimiento individual usa el código confirmado del catálogo. Las duraciones nominales de los códigos 1 a 8 son 700, 900, 250, 1000, 900, 350, 1000 y 700 ms. Cada paso DEMO toma su duración y pausa del plan obtenido de RDS. La pausa deja la consigna en neutral y el paso siguiente lleva otro identificador de pulso. Inicio, cancelación, fin y error conservan sus eventos públicos. La cancelación invalida el pulso antes de esperar una escritura en curso. Una DEMO con permiso perdido termina sin reiniciar pasos en una sesión nueva. Cambiar el catálogo invalida solicitudes con su barrera anterior.
 
 La coordinación por vehículo impide que una DEMO, un pulso o un permiso de joystick válido compitan por el canal. Se conserva una fila de historial por movimiento individual confirmado y ninguna por paso DEMO. Los GET y los 21 procedimientos almacenados mantienen su contrato. Si DETENER llega mientras un commit está en proceso, ese commit puede quedar en estado e historial, pero su pulso queda invalidado.
+
+Activa `IOT_CONTINUOUS_PERSIST_TRANSITIONS=true` para comprobar y guardar
+cada cambio de dirección usando el código y nombre del catálogo y el
+`id_comando` real. La salida espera en neutral durante la escritura.
+El mismo vector renueva su permiso sin llamar a RDS. El primer vector
+confirmado de cada transición incluye `id_operacion`, `id_historial` y
+`ms_persistencia`, que abarca la escritura y el encolado de la notificación
+pública. El evento `movimiento_individual` lleva los mismos identificadores.
+Los movimientos discretos gestionados pueden enviar un `id_solicitud` UUID
+para rechazar duplicados dentro de la barrera. La API devuelve ese
+identificador como `id_operacion` al confirmar el movimiento.
 
 ## Configuración local y pruebas
 

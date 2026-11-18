@@ -11,7 +11,7 @@ from fastapi.security import APIKeyHeader
 from pydantic import Field, SecretStr, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict, SettingsError
 
-from app.evaluation import EvaluationPrincipal, evaluation_access
+from app.evaluation import EvaluationPrincipal, browser_access, evaluation_access
 
 
 class Role(str, Enum):
@@ -71,7 +71,7 @@ def get_current_role(
     """Valida ambas claves y compara bytes para admitir valores Unicode."""
 
     if api_key is None and request is not None and "authorization" in request.headers:
-        return evaluation_access.authorize(request)
+        return browser_access(evaluation_access).authorize(request)
     operator = settings.api_key_operator.get_secret_value()
     admin = settings.api_key_admin.get_secret_value()
     try:

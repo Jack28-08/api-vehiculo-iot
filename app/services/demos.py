@@ -70,7 +70,7 @@ class DemoExecutionManager:
             if ticket is not None:
                 continuous.pulse_ticket(id_vehiculo, ticket)
                 for movement in plan.movimientos:
-                    continuous.validate_pulse_code(movement.get("codigo"))
+                    continuous.validate_pulse_code(movement.get("codigo"), movement.get("comando"))
             execution = DemoExecution(plan, pulse_ticket=ticket)
             with self._lifecycle_lock:
                 if self._closing:
@@ -110,6 +110,7 @@ class DemoExecutionManager:
     def _step(self, execution, movement):
         plan = execution.plan
         ticket = execution.pulse_ticket
+        operation_id = uuid4()
         with self.coordinator.lock_for(plan.id_vehiculo):
             if execution.cancel_requested.is_set() or self.coordinator.get_active(plan.id_vehiculo) is not execution:
                 return False
@@ -128,11 +129,13 @@ class DemoExecutionManager:
                         raise ApplicationError(409, "El catálogo cambió desde que se preparó la DEMO.", "changed_demo_code")
 
                 state = self.data.step(plan.id_vehiculo, plan.id_demo, movement, before_execute=validate_command)
-                dispatched = continuous.dispatch_pulse(plan.id_vehiculo, ticket, state.get("codigo"), movement["duracion_ms"])
+                dispatched = continuous.dispatch_pulse(plan.id_vehiculo, ticket, state.get("codigo"),
+                                                       movement["duracion_ms"], name=state.get("comando"),
+                                                       operation=operation_id)
             execution.last_state = state
             self._publish(self._event(
                 execution, "demo_movimiento", state, orden=movement["orden"],
-                duracion_ms=movement["duracion_ms"], pausa_ms=movement["pausa_ms"],
+                duracion_ms=movement["duracion_ms"], pausa_ms=movement["pausa_ms"], id_operacion=operation_id,
             ))
             if not dispatched:
                 if execution.cancel_requested.is_set() or self.coordinator.stopping(plan.id_vehiculo):
@@ -231,8 +234,7 @@ class DemoExecutionManager:
         # Se marca antes de esperar RDS; no bloquea el bucle y da prioridad al stop.
         self.coordinator.begin_stop(id_vehiculo)
         try:
-            if self._continuous is not None:
-                self._continuous.stop(id_vehiculo)
+            operation_id = self._continuous.stop(id_vehiculo) if self._continuous is not None else None
             execution = self.coordinator.get_active(id_vehiculo)
             if execution is not None:
                 await self._cancel_execution(execution)
@@ -243,6 +245,7 @@ class DemoExecutionManager:
                     self._publish(state_event(
                         "detencion_logica", id_vehiculo, state,
                         id_ejecucion=execution.id_ejecucion if execution else None,
+                        id_operacion=operation_id,
                         mensaje="Detención lógica de la API; sin confirmación física de motores.",
                     ))
 
@@ -250,6 +253,7 @@ class DemoExecutionManager:
             await asyncio.to_thread(acknowledge)
             return {"id_vehiculo": id_vehiculo, "detencion_logica": True,
                     "id_ejecucion": execution.id_ejecucion if execution else None,
+                    "id_operacion": operation_id,
                     "estado": "detenida_logicamente"}
         finally:
             self.coordinator.end_stop(id_vehiculo)
