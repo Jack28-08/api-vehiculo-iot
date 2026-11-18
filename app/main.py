@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from app.database.connection import DatabaseUnavailableError
 from app.errors import ApplicationError
 from app.evaluation import router as evaluation_router
+from app.routes.continuous import router as continuous_router
 from app.routes.health import router as health_router
 from app.routes.vehiculos import router as vehicles_router
 from app.routes.demos import router as demos_router
@@ -55,6 +56,7 @@ app.include_router(vehicles_router)
 app.include_router(demos_router)
 app.include_router(websocket_router)
 app.include_router(evaluation_router)
+app.include_router(continuous_router)
 
 
 @app.exception_handler(ApplicationError)

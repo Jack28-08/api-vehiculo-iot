@@ -28,10 +28,11 @@ class DemoExecution:
 
 
 class DemoExecutionManager:
-    def __init__(self, coordinator, data_service, connection_manager):
+    def __init__(self, coordinator, data_service, connection_manager, *, on_stop=None):
         self.coordinator = coordinator
         self.data = data_service
         self.connections = connection_manager
+        self._on_stop = on_stop
         self._loop = None
         self._closing = False
         self._lifecycle_lock = threading.RLock()
@@ -180,6 +181,8 @@ class DemoExecutionManager:
         # Se marca antes de esperar RDS; no bloquea el bucle y da prioridad al stop.
         self.coordinator.begin_stop(id_vehiculo)
         try:
+            if self._on_stop is not None:
+                self._on_stop(id_vehiculo)
             execution = self.coordinator.get_active(id_vehiculo)
             if execution is not None:
                 await self._cancel_execution(execution)

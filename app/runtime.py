@@ -1,6 +1,7 @@
 """Componentes compartidos únicamente dentro del proceso local de la aplicación."""
 
 from app.models.events import state_event
+from app.services.continuous import ContinuousControl
 from app.services.coordination import VehicleCoordinator
 from app.services.demo_data import DemoDataService
 from app.services.demos import DemoExecutionManager
@@ -22,8 +23,7 @@ class CoordinatedVehiculoService:
 
         def mutate(id_vehiculo, *args, **kwargs):
             self.runtime.coordinator.ensure_available(id_vehiculo)
-            with self.runtime.coordinator.lock_for(id_vehiculo):
-                self.runtime.coordinator.ensure_available(id_vehiculo)
+            with self.runtime.coordinator.lock_for(id_vehiculo), self.runtime.coordinator.legacy_mutation(id_vehiculo):
                 result = operation(id_vehiculo, *args, **kwargs)
                 if name == "ejecutar_movimiento":
                     # El servicio solo retorna después de su commit; fallos no llegan aquí.
@@ -40,11 +40,13 @@ class CoordinatedVehiculoService:
 
 
 class AppRuntime:
-    def __init__(self, data_service=None, connections=None):
+    def __init__(self, data_service=None, connections=None, *, device_settings=None):
         self.coordinator = VehicleCoordinator()
         self.connections = connections if connections is not None else ConnectionManager()
         self.data = data_service if data_service is not None else DemoDataService()
-        self.demos = DemoExecutionManager(self.coordinator, self.data, self.connections)
+        self.continuous = ContinuousControl(self.coordinator, device_settings)
+        self.demos = DemoExecutionManager(self.coordinator, self.data, self.connections,
+                                          on_stop=self.continuous.stop)
         self.control_tasks = set()
 
     def bind_loop(self):
@@ -71,6 +73,7 @@ class AppRuntime:
             )
 
     async def shutdown(self):
+        self.continuous.close()
         await self.demos.shutdown()
         if self.control_tasks:
             import asyncio
