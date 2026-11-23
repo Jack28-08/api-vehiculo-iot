@@ -16,6 +16,7 @@ class DemoPlan:
     id_vehiculo: int
     id_demo: int
     movimientos: tuple[dict, ...]
+    commercial: bool = False
 
     @property
     def total_movimientos(self):
@@ -63,17 +64,20 @@ class DemoDataService(VehiculoService):
                 raise ApplicationError(409, "El orden de la DEMO no es válido.", "invalid_demo")
             return DemoPlan(id_vehiculo, id_demo, tuple(dict(r) for r in rows))
 
-    def step(self, id_vehiculo, id_demo, movement, *, before_execute=None):
+    def step(self, id_vehiculo, id_demo, movement, *, before_execute=None, commercial=False, platform_policy=None):
         self._valid_movement(movement)
         with self.manager.transaction() as connection:
             vehicle = Vehiculo.desde_fila(self._vehiculo(connection, id_vehiculo, lock=True))
             vehicle.exigir_activo()
-            demo = Demo.desde_fila(self._demo(connection, id_vehiculo, id_demo))
-            demo.exigir_pertenencia(vehicle)
-            demo.exigir_activa()
+            if not commercial:
+                demo = Demo.desde_fila(self._demo(connection, id_vehiculo, id_demo))
+                demo.exigir_pertenencia(vehicle)
+                demo.exigir_activa()
             command = Comando.desde_fila(
                 self._comando(connection, id_vehiculo, movement["id_comando"], lock=True),
             )
+            if platform_policy is not None:
+                platform_policy(command.codigo, connection=connection)
             if before_execute is not None:
                 before_execute(command.codigo)
             operation = MovimientoDeDemo(vehicle, command)

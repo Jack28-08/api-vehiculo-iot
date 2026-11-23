@@ -225,7 +225,7 @@ class MovementTransactionTests(unittest.TestCase):
         data = initial_data()
         data["commands"][11].update(codigo=2, nombre="AVANZAR")
         with harness(data) as (service, repository, connection, durable):
-            state, history_id = service.ejecutar_transicion(1, 2, {"AVANZAR"}, lambda: None)
+            state, history_id = service.ejecutar_transicion(1, 2, {"AVANZAR"}, lambda connection: None)
             self.assertEqual((state.id_comando, state.codigo, history_id), (11, 2, 100))
             self.assertEqual(repository.history_rows_read, [])
             self.assertEqual(len(durable["history"]), 2)

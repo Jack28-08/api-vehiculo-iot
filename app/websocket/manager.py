@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 import threading
 from typing import Any
 
+from app.database.connection import DatabaseUnavailableError
+from app.errors import ApplicationError
 from app.models.events import VehicleEvent
 
 
@@ -133,6 +135,21 @@ class ConnectionManager:
         try:
             while not client.closed:
                 payload = await client.queue.get()
+                scope = getattr(client.websocket, "scope", {})
+                guard = scope.get("iot43_sender_guard")
+                if guard is not None:
+                    try:
+                        await asyncio.to_thread(guard)
+                    except (ApplicationError, DatabaseUnavailableError):
+                        await self._terminate(client, 4403)
+                        return
+                if scope.get("iot43_guest"):
+                    if payload["tipo"] not in {"estado_inicial", "movimiento_individual", "detencion_logica"}:
+                        continue
+                    payload = {**payload, "id_historial": None, "id_operacion": None}
+                history_policy = scope.get("iot43_history_policy")
+                if history_policy is not None and not history_policy(payload["fecha_hora"]):
+                    continue
                 await asyncio.wait_for(client.websocket.send_json(payload), self.send_timeout)
         except asyncio.CancelledError:
             raise

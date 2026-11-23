@@ -210,13 +210,16 @@ class VehiculoService:
             self.repository.eliminar_movimiento_demo(connection, id_demo_movimiento)
             return EliminacionRespuesta(eliminado=True, id=id_demo_movimiento)
 
-    def ejecutar_movimiento(self, id_vehiculo: int, data: MovimientoEjecutar, *, before_execute=None) -> MovimientoConfirmado:
+    def ejecutar_movimiento(self, id_vehiculo: int, data: MovimientoEjecutar, *,
+                            before_execute=None, platform_policy=None) -> MovimientoConfirmado:
         with self.manager.transaction() as connection:
             vehicle = Vehiculo.desde_fila(self._vehiculo(connection, id_vehiculo, lock=True))
             vehicle.exigir_activo()
             command = Comando.desde_fila(
                 self._comando(connection, id_vehiculo, data.id_comando, lock=True),
             )
+            if platform_policy is not None:
+                platform_policy(command.codigo, connection=connection)
             if before_execute is not None:
                 before_execute(command.codigo)
             return self._confirmar_movimiento(connection, vehicle, command, data.origen)
@@ -230,7 +233,7 @@ class VehiculoService:
             if len(candidates) != 1 or candidates[0]["nombre"] not in nombres:
                 raise ApplicationError(409, "La dirección no coincide con el catálogo del vehículo.", "direction_catalog")
             command = Comando.desde_fila(candidates[0])
-            before_execute()
+            before_execute(connection)
             confirmed = MovimientoIndividual(vehicle, command, "CONTROL-WEB").ejecutar(
                 self.repository, connection, consultar_historial=False,
             )

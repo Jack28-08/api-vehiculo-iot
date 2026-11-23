@@ -70,6 +70,8 @@ def get_current_role(
 ) -> Role | EvaluationPrincipal:
     """Valida ambas claves y compara bytes para admitir valores Unicode."""
 
+    if request is not None and hasattr(request.state, "vehicle_scope"):
+        return request.state.actor
     if api_key is None and request is not None and "authorization" in request.headers:
         return browser_access(evaluation_access).authorize(request)
     operator = settings.api_key_operator.get_secret_value()

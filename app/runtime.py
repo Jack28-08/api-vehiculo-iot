@@ -28,6 +28,7 @@ class CoordinatedVehiculoService:
         def mutate(id_vehiculo, *args, **kwargs):
             continuous = self.runtime.continuous
             barrier = kwargs.pop("control_barrier", None)
+            platform_policy = kwargs.pop("platform_policy", None)
             movement = name == "ejecutar_movimiento"
             request = (args[0] if args else kwargs.get("data")) if movement else None
             request_id = getattr(request, "id_solicitud", None)
@@ -41,12 +42,13 @@ class CoordinatedVehiculoService:
                     def validate_command(code):
                         continuous.validate_pulse_ticket(id_vehiculo, ticket)
                         continuous.validate_pulse_code(code)
-
                     kwargs["before_execute"] = validate_command
                 elif name in {"actualizar_vehiculo", "eliminar_vehiculo", "crear_comando",
                               "actualizar_comando", "eliminar_comando"}:
                     # Una modificación de catálogo invalida solicitudes que vieron sus datos anteriores.
                     continuous.stop(id_vehiculo)
+                if platform_policy is not None:
+                    kwargs["platform_policy"] = platform_policy
                 result = operation(id_vehiculo, *args, **kwargs)
                 if movement:
                     operation_id = request_id or uuid4()
@@ -110,7 +112,11 @@ class AppRuntime:
     def subscribe(self, websocket, id_vehiculo):
         # Snapshot y registro se ordenan con todos los commits y eventos del vehículo.
         with self.coordinator.lock_for(id_vehiculo):
-            state = self.data.snapshot(id_vehiculo)
+            socket_scope = getattr(websocket, "scope", {})
+            state = None if socket_scope.get("iot43_guest") else self.data.snapshot(id_vehiculo)
+            history_policy = socket_scope.get("iot43_history_policy")
+            if state and history_policy is not None and not history_policy(state.get("fecha_actualizacion")):
+                state = None
             return self.connections.register_threadsafe(
                 websocket, id_vehiculo, state_event("estado_inicial", id_vehiculo, state),
             )

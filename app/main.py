@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.database.connection import DatabaseUnavailableError
 from app.errors import ApplicationError
+from app.platform43 import access as access43, auth as auth43, commercial_routes, operations
 from app.evaluation import router as evaluation_router
 from app.routes.continuous import router as continuous_router
 from app.routes.health import router as health_router
@@ -30,25 +31,35 @@ async def lifespan(application):
 app = FastAPI(
     title="API Vehículo IoT",
     description=(
-        "Práctica 2.5: HTTP con POO y los 21 SP del contrato real de RDS. "
-        "GET y WebSocket de monitoreo públicos. El operador usa X-API-Key para movimientos y DEMO. "
-        "El acceso directo opcional admite sesiones limitadas al mando del vehículo 1. "
-        "La gestión requiere clave de administrador. Las actualizaciones y eliminaciones "
-        "usan POST por requisito de la práctica. DEMO y DETENER son operaciones lógicas; "
-        "ningún evento confirma actuación física del microcontrolador."
+        "Control, Monitoreo y Administración IoT con 21 SP históricos. "
+        "Con IOT43_ENABLED se usan sesiones por rol y autorización por unidad. "
+        "El monitor se abre con un ticket de un solo uso. "
+        "Con 4.3 deshabilitada, las rutas históricas mantienen sus métodos y permisos. "
+        "El canal de actuación usa una credencial de dispositivo independiente."
     ),
-    version="0.3.0",
+    version="0.4.3",
     lifespan=lifespan,
 )
 
+app.middleware("http")(access43.gate_legacy)
+class PlatformCors:
+    def __init__(self, app, **options):
+        self.legacy = CORSMiddleware(app, **options, allow_methods=["GET", "POST", "OPTIONS"])
+        self.platform = CORSMiddleware(app, **options,
+                                      allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
+
+    async def __call__(self, scope, receive, send):
+        service = self.platform if scope.get("path", "").startswith("/plataforma/") else self.legacy
+        await service(scope, receive, send)
+
+
 app.add_middleware(
-    CORSMiddleware,
+    PlatformCors,
     allow_origins=[
         "https://jack28-08.github.io",
         "http://localhost:5500",
     ],
     allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["X-API-Key", "Content-Type", "Accept", "Authorization", "X-IoT-Barrier"],
 )
 
@@ -58,6 +69,10 @@ app.include_router(demos_router)
 app.include_router(websocket_router)
 app.include_router(evaluation_router)
 app.include_router(continuous_router)
+app.include_router(auth43.router)
+app.include_router(access43.router)
+app.include_router(commercial_routes.router)
+app.include_router(operations.router)
 
 
 @app.exception_handler(ApplicationError)

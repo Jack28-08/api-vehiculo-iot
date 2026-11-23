@@ -22,6 +22,7 @@ class VehicleEvent(BaseModel):
     conectado: bool | None = None
     id_ejecucion: str | None = None
     id_demo: int | None = None
+    origen_demo: Literal["comercial"] | None = None
     total_movimientos: int | None = None
     orden: int | None = None
     duracion_ms: int | None = None

@@ -3,7 +3,7 @@
 import asyncio
 from contextlib import suppress
 
-from fastapi import APIRouter, Depends, Response, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Request, Response, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
 
 from app.models.continuous import Capability, ControlGrant, ControlVector, DeviceHeartbeat, Gesture, ReleaseResult
@@ -12,6 +12,7 @@ from app.routes.vehiculos import IdRuta
 from app.runtime import runtime
 from app.security import require_operator
 from app.services.continuous import DEVICE_TIMEOUT
+from app.platform43.access import check_vector
 
 
 router = APIRouter(tags=["Control continuo"])
@@ -28,16 +29,20 @@ def capability(id_vehiculo: IdRuta, response: Response):
 
 
 @router.post("/vehiculos/{id_vehiculo}/control/permiso", dependencies=operator, response_model=ControlGrant)
-def acquire(id_vehiculo: IdRuta, vector: ControlVector, response: Response):
+def acquire(id_vehiculo: IdRuta, vector: ControlVector, response: Response, request: Request = None):
     """Reserva un permiso con secuencia inicial 1. Mantiene la consigna neutral."""
     response.headers["Cache-Control"] = "no-store"
+    check_vector(request, vector)
     return runtime.continuous.acquire(id_vehiculo, vector)
 
 
 @router.post("/vehiculos/{id_vehiculo}/control/vector", dependencies=operator, response_model=ControlGrant)
-def update(id_vehiculo: IdRuta, vector: ControlVector, response: Response):
+def update(id_vehiculo: IdRuta, vector: ControlVector, response: Response, request: Request = None):
     """Modifica la consigna efímera con una secuencia estrictamente creciente."""
     response.headers["Cache-Control"] = "no-store"
+    policy = check_vector(request, vector)
+    if policy is not None:
+        return runtime.continuous.update(id_vehiculo, vector, platform_policy=policy)
     return runtime.continuous.update(id_vehiculo, vector)
 
 

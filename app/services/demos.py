@@ -14,6 +14,7 @@ from app.models.events import VehicleEvent, state_event
 class DemoExecution:
     plan: object
     pulse_ticket: str | None = None
+    policy: object = None
     id_ejecucion: str = field(default_factory=lambda: str(uuid4()))
     cancel_requested: threading.Event = field(default_factory=threading.Event)
     wake: asyncio.Event = field(default_factory=asyncio.Event)
@@ -53,9 +54,10 @@ class DemoExecutionManager:
         plan = execution.plan
         return state_event(kind, plan.id_vehiculo, state,
                            id_ejecucion=execution.id_ejecucion, id_demo=plan.id_demo,
+                           origen_demo="comercial" if getattr(plan, "commercial", False) else None,
                            total_movimientos=plan.total_movimientos, **metadata)
 
-    def start(self, id_vehiculo, id_demo, *, barrier=None):
+    def start(self, id_vehiculo, id_demo, *, barrier=None, policy=None, prepared=None):
         """Método síncrono: la ruta lo llama en un worker, nunca en el bucle."""
         if self._closing or self._loop is None:
             raise ApplicationError(503, "El ejecutor de DEMO no está disponible.", "demo_unavailable")
@@ -66,12 +68,15 @@ class DemoExecutionManager:
             self.coordinator.ensure_available(id_vehiculo)
             if ticket is not None:
                 continuous.pulse_ticket(id_vehiculo, ticket)
-            plan = self.data.prepare(id_vehiculo, id_demo)
+            plan = prepared if prepared is not None else self.data.prepare(id_vehiculo, id_demo)
+            if policy is not None:
+                for movement in plan.movimientos:
+                    policy(movement["codigo"])
             if ticket is not None:
                 continuous.pulse_ticket(id_vehiculo, ticket)
                 for movement in plan.movimientos:
                     continuous.validate_pulse_code(movement.get("codigo"), movement.get("comando"))
-            execution = DemoExecution(plan, pulse_ticket=ticket)
+            execution = DemoExecution(plan, pulse_ticket=ticket, policy=policy)
             with self._lifecycle_lock:
                 if self._closing:
                     raise ApplicationError(503, "El ejecutor de DEMO está cerrando.", "demo_unavailable")
@@ -115,23 +120,29 @@ class DemoExecutionManager:
             if execution.cancel_requested.is_set() or self.coordinator.get_active(plan.id_vehiculo) is not execution:
                 return False
             # Al volver, la transacción ya fue confirmada y cerrada.
-            if ticket is None:
+            if ticket is None and execution.policy is None:
                 state = self.data.step(plan.id_vehiculo, plan.id_demo, movement)
                 dispatched = True
             else:
                 continuous = self._continuous
-                continuous.validate_pulse_ticket(plan.id_vehiculo, ticket)
+                if ticket is not None:
+                    continuous.validate_pulse_ticket(plan.id_vehiculo, ticket)
 
                 def validate_command(code):
-                    continuous.validate_pulse_ticket(plan.id_vehiculo, ticket)
-                    continuous.validate_pulse_code(code)
+                    if ticket is not None:
+                        continuous.validate_pulse_ticket(plan.id_vehiculo, ticket)
+                        continuous.validate_pulse_code(code)
                     if code != movement.get("codigo"):
                         raise ApplicationError(409, "El catálogo cambió desde que se preparó la DEMO.", "changed_demo_code")
 
-                state = self.data.step(plan.id_vehiculo, plan.id_demo, movement, before_execute=validate_command)
-                dispatched = continuous.dispatch_pulse(plan.id_vehiculo, ticket, state.get("codigo"),
-                                                       movement["duracion_ms"], name=state.get("comando"),
-                                                       operation=operation_id)
+                kwargs = {"commercial": True} if getattr(plan, "commercial", False) else {}
+                if execution.policy is not None:
+                    kwargs["platform_policy"] = execution.policy
+                state = self.data.step(plan.id_vehiculo, plan.id_demo, movement, before_execute=validate_command, **kwargs)
+                dispatched = ticket is None or continuous.dispatch_pulse(
+                    plan.id_vehiculo, ticket, state.get("codigo"),
+                    movement["duracion_ms"], name=state.get("comando"), operation=operation_id,
+                )
             execution.last_state = state
             self._publish(self._event(
                 execution, "demo_movimiento", state, orden=movement["orden"],
@@ -146,7 +157,22 @@ class DemoExecutionManager:
     async def _wait(self, execution, milliseconds):
         if execution.cancel_requested.is_set():
             return True
-        if milliseconds:
+        if milliseconds and execution.policy is not None:
+            end = asyncio.get_running_loop().time() + milliseconds / 1000
+            while (remaining := end - asyncio.get_running_loop().time()) > 0:
+                try:
+                    await asyncio.wait_for(execution.wake.wait(), min(remaining, .45))
+                    return True
+                except TimeoutError:
+                    if remaining > .45:
+                        try:
+                            await asyncio.to_thread(execution.policy)
+                        except Exception:
+                            if execution.pulse_ticket is not None:
+                                self._continuous.stop(execution.plan.id_vehiculo)
+                            execution.cancel_requested.set()
+                            return True
+        elif milliseconds:
             try:
                 await asyncio.wait_for(execution.wake.wait(), milliseconds / 1000)
             except TimeoutError:
@@ -219,6 +245,15 @@ class DemoExecutionManager:
         if execution.task is not None:
             await asyncio.shield(execution.task)
         return execution.response()
+
+    def signal_cancel(self, id_vehiculo):
+        """Revoca desde una transacción administrativa sin esperar al worker RDS."""
+        execution = self.coordinator.get_active(id_vehiculo)
+        if execution is None:
+            return
+        execution.cancel_requested.set()
+        if self._loop is not None and not self._loop.is_closed():
+            self._loop.call_soon_threadsafe(execution.wake.set)
 
     async def cancel(self, id_vehiculo, id_demo=None):
         execution = self.coordinator.get_active(id_vehiculo)

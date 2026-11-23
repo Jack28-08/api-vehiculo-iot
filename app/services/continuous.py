@@ -294,7 +294,7 @@ class ContinuousControl:
             self._lease = Lease(vector.gesto, vector.secuencia, deadline)
             return self._grant()
 
-    def update(self, vehicle_id, vector):
+    def update(self, vehicle_id, vector, *, platform_policy=None):
         self._require_enabled(vehicle_id)
         axes = (vector.longitudinal, vector.lateral)
         with self._guard:
@@ -313,11 +313,14 @@ class ContinuousControl:
             lease.longitudinal = lease.lateral = 0
             self._neutral_operation = uuid4()
 
-        def validate():
+        code = DIRECTION_CODES[axes]
+
+        def validate(connection=None):
+            if connection is not None and platform_policy is not None:
+                platform_policy(code, connection=connection)
             with self._guard:
                 self._update_lease(vector)
 
-        code = DIRECTION_CODES[axes]
         try:
             started = self._clock()
             history_id, timings = self._record_transition(vehicle_id, code, DIRECTION_NAMES[code], operation, validate)

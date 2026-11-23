@@ -6,7 +6,7 @@ servicio. Los permisos se comprueban antes de acceder a la base de datos.
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, Path, status
+from fastapi import APIRouter, Depends, Header, Path, Request, status
 
 from app.models.vehiculos import (
     INT_MAX,
@@ -31,6 +31,7 @@ from app.models.vehiculos import (
 from app.security import require_admin, require_operator
 from app.services.vehiculos import VehiculoService
 from app.runtime import CoordinatedVehiculoService, runtime
+from app.platform43.access import command_policy, permitted_commands, request_scope, visible_since_assignment
 
 
 READ_RESPONSES = {
@@ -224,14 +225,20 @@ class VehiculoController:
     def obtener_vehiculo(self, id_vehiculo: IdRuta, service: Service):
         return service.obtener_vehiculo(id_vehiculo)
 
-    def obtener_comandos(self, id_vehiculo: IdRuta, service: Service):
-        return service.obtener_comandos(id_vehiculo)
+    def obtener_comandos(self, id_vehiculo: IdRuta, service: Service, request: Request = None):
+        return permitted_commands(request, service.obtener_comandos(id_vehiculo))
 
-    def obtener_estado(self, id_vehiculo: IdRuta, service: Service):
-        return service.obtener_estado(id_vehiculo)
+    def obtener_estado(self, id_vehiculo: IdRuta, service: Service, request: Request = None):
+        state = service.obtener_estado(id_vehiculo)
+        scope = request_scope(request)
+        if scope is None or (state is not None and visible_since_assignment(scope, state.fecha_actualizacion)):
+            return state
+        return None
 
-    def obtener_historial(self, id_vehiculo: IdRuta, service: Service):
-        return service.obtener_historial(id_vehiculo)
+    def obtener_historial(self, id_vehiculo: IdRuta, service: Service, request: Request = None):
+        records = service.obtener_historial(id_vehiculo)
+        scope = request_scope(request)
+        return records if scope is None else [row for row in records if visible_since_assignment(scope, row.fecha_hora)]
 
     def obtener_demos(self, id_vehiculo: IdRuta, service: Service):
         return service.obtener_demos(id_vehiculo)
@@ -277,7 +284,12 @@ class VehiculoController:
         return service.eliminar_movimiento_demo(id_vehiculo, id_demo, id_demo_movimiento)
 
     def ejecutar_movimiento(self, id_vehiculo: IdRuta, payload: MovimientoEjecutar, service: Service,
-                             barrier: ControlBarrier = None):
+                             barrier: ControlBarrier = None, request: Request = None):
+        scope = request_scope(request)
+        if scope is not None:
+            policy = command_policy(scope, payload.id_comando)
+            policy()
+            return service.ejecutar_movimiento(id_vehiculo, payload, control_barrier=barrier, platform_policy=policy)
         if barrier is None:
             return service.ejecutar_movimiento(id_vehiculo, payload)
         return service.ejecutar_movimiento(id_vehiculo, payload, control_barrier=barrier)
